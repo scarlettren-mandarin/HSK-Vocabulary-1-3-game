@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>汉语水平考试词汇游戏</title>
+    <style>
+        .main-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .main-title {
+            text-align: center;
+            font-size: 48px;
+            color: #2f54eb;
+            margin-top: 50px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        
+        .subtitle {
+            font-size: 20px;
+            color: #666;
+            margin-bottom: 60px;
+        }
+        
+        .menu-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-top: 50px;
+        }
+        
+        .menu-btn {
+            padding: 25px 50px;
+            font-size: 24px;
+            border-radius: 25px;
+            border: 3px solid transparent;
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            min-width: 200px;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .menu-btn:hover {
+            transform: translateY(-5px);
+            border-color: white;
+        }
+        
+        .menu-btn.hsk {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            box-shadow: 0 10px 20px rgba(245, 87, 108, 0.3);
+        }
+        
+        .menu-btn.hsk:hover {
+            box-shadow: 0 15px 30px rgba(245, 87, 108, 0.4);
+        }
+        
+        .menu-btn.yct {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            box-shadow: 0 10px 20px rgba(79, 172, 254, 0.3);
+        }
+        
+        .menu-btn.yct:hover {
+            box-shadow: 0 15px 30px rgba(79, 172, 254, 0.4);
+        }
+        
+        .footer {
+            margin-top: 100px;
+            color: #888;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <button style="position: absolute; top: 20px; left: 20px; padding: 10px 20px; background: #f0f2f5; border: 2px solid #ddd; border-radius: 20px; cursor: pointer; font-weight: bold; z-index: 1000;" onclick="window.location.href='index.html'">
+    ← 返回主页面
+</button>
+    <div class="main-container">
+        <h1 class="main-title">汉语水平考试词汇游戏</h1>
+        <p class="subtitle">选择考试类型开始学习</p>
+        
+        <div class="menu-buttons">
+            <a href="YCT1.0.html" class="menu-btn yct">
+                YCT<br>
+                <small style="font-size: 16px;">Youth Chinese Test</small>
+            </a>
+            <a href="hsk1.0.html" class="menu-btn hsk">
+                HSK<br>
+                <small style="font-size: 16px;">汉语水平考试</small>
+            </a>
+        </div>
+        
+        <div class="footer">
+            <p>为汉语学习者设计的词汇记忆游戏</p>
+            <p>© 2024 汉语词汇大师</p>
+        </div>
+    </div>
+</body>
+</html>

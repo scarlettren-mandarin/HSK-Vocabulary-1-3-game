@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>YCT Vocabulary Mastery</title>
+    <style>
+        :root { --primary: #52c41a; --success: #1890ff; --error: #ff4d4f; --bg: #f0f2f5; }
+        body { font-family: 'PingFang SC', sans-serif; background: var(--bg); margin: 0; padding: 20px; }
+        .container { max-width: 1000px; margin: 0 auto; }
+        
+        /* 登录遮罩 */
+        #loginView {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); z-index: 2000; justify-content: center; align-items: center;
+        }
+        .login-box { background: white; padding: 40px; border-radius: 20px; text-align: center; width: 320px; }
+        .login-box input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+
+        .main-title { text-align: center; font-size: 32px; color: #52c41a; margin-top: 20px; font-weight: 800; }
+        #levelSelector { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin: 30px 0; }
+        
+        .lvl-btn { padding: 10px 20px; border-radius: 20px; border: 2px solid #ddd; background: white; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        .lvl-btn.active { border-color: var(--primary); background: #f6ffed; color: var(--primary); box-shadow: 0 4px 12px rgba(82,196,26,0.2); }
+
+        .unit-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 20px; padding: 20px; }
+        .unit-card { 
+            background: white; padding: 25px; border-radius: 18px; text-align: center; cursor: pointer; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05); transition: 0.3s; border: 2px solid transparent; 
+        }
+        .unit-card:hover { transform: translateY(-5px); border-color: var(--primary); }
+        .unit-emoji { font-size: 45px; margin-bottom: 10px; display: block; }
+
+        #gameView { display: none; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); }
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #f0f0f0; padding-bottom: 15px; }
+        .game-area { display: flex; justify-content: space-around; min-height: 450px; margin-top: 20px; }
+        .column { display: flex; flex-direction: column; gap: 12px; width: 45%; }
+        .card { padding: 15px; background: #fff; border: 2px solid #e8e8e8; border-radius: 12px; cursor: pointer; text-align: center; min-height: 65px; display: flex; align-items: center; justify-content: center; font-size: 18px; transition: 0.2s; }
+        .card.selected { background: #f6ffed; border-color: var(--primary); color: var(--primary); }
+        .card.correct { background: #e6f7ff; border-color: var(--success); color: var(--success); cursor: default; }
+        
+        #reportOverlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:3000; justify-content:center; align-items:center; }
+        .report-box { background:white; padding:40px; border-radius:25px; text-align:center; width: 85%; max-width: 400px; }
+        
+        /* 错词统计样式 */
+        #mistakesPanel {
+            display: none;
+            background: white;
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 12px;
+            border-left: 4px solid var(--error);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .mistakes-title {
+            font-weight: bold;
+            color: var(--error);
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .mistakes-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        
+        .mistake-item {
+            background: #fff2f0;
+            border: 1px solid #ffccc7;
+            border-radius: 6px;
+            padding: 8px 12px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .mistake-hanzi {
+            font-weight: bold;
+            font-size: 16px;
+        }
+        
+        .mistake-pinyin {
+            color: #666;
+            font-size: 12px;
+        }
+        
+        .mistake-translation {
+            color: #888;
+            font-size: 12px;
+        }
+        
+        .clear-mistakes-btn {
+            background: none;
+            border: none;
+            color: var(--error);
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        .mistake-count {
+            background: var(--error);
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            margin-left: 8px;
+        }
+    </style>
+</head>
+<body>
+
+<div id="loginView">
+    <div class="login-box">
+        <h2 style="color:var(--primary)">🐼 Student Login</h2>
+        <p style="color:#888; font-size:14px;">Please login for YCT 3-4</p>
+        <input type="text" id="username" placeholder="Name / Имя">
+        <input type="password" id="password" placeholder="Password / Пароль">
+        <button class="lvl-btn active" style="width:100%" onclick="checkLogin()">Login / Вход</button>
+        <p id="loginError" style="color:var(--error); display:none; margin-top:10px;">Error Login!</p>
+    </div>
+</div>
+
+<div class="container">
+    <div id="homeView">
+        <h1 class="main-title">🌟 YCT Vocabulary 🐼</h1>
+        <div id="levelSelector"></div>
+        <div class="unit-grid" id="unitGrid"></div>
+    </div>
+
+    <div id="gameView">
+        <div class="header">
+            <button class="lvl-btn" onclick="goHome()">← Back</button>
+            <div style="text-align:center">
+                <h2 id="unitTitle" style="margin:0;">Unit</h2>
+                <div id="modeTag" style="color:var(--primary); font-size:13px; font-weight:bold;"></div>
+            </div>
+            <div id="timer" style="font-family:monospace; font-weight:bold;">00:00</div>
+        </div>
+        
+        <!-- 错词统计面板 -->
+        <div id="mistakesPanel">
+            <div class="mistakes-title">
+                <span>错词统计 <span id="mistakeCount" class="mistake-count">0</span></span>
+                <button class="clear-mistakes-btn" onclick="clearMistakes()">清空</button>
+            </div>
+            <div id="mistakesList" class="mistakes-list">
+                <!-- 错词将在这里显示 -->
+            </div>
+        </div>
+        
+        <div class="game-area">
+            <div class="column" id="leftCol"></div>
+            <div class="column" id="rightCol"></div>
+        </div>
+        <div class="footer" style="display:flex; justify-content:space-between; margin-top:30px; align-items:center;">
+            <div id="progress" style="font-weight:bold; color:#666;">Progress: 0/5</div>
+            <button id="nextBtn" class="lvl-btn" style="background:#ccc; color:white; cursor:not-allowed;" onclick="nextLevel()">Next Level</button>
+        </div>
+    </div>
+</div>
+
+<div id="reportOverlay">
+    <div class="report-box">
+        <h2 style="color:var(--success)">Well Done! 🎉</h2>
+        <div id="reportContent" style="margin:20px 0; font-size:18px; line-height:1.8;"></div>
+        <!-- 错词回顾部分 -->
+        <div id="mistakesReview" style="margin: 20px 0; text-align: left; display: none;">
+            <h3 style="color: var(--error); margin-top: 0;">错词回顾</h3>
+            <div id="reviewList" style="max-height: 200px; overflow-y: auto; padding: 10px; background: #f8f9fa; border-radius: 8px;"></div>
+        </div>
+        <button class="lvl-btn active" style="width:100%" onclick="goHome()">Back to Home</button>
+    </div>
+</div>
+
+<script>
+// --- 1. 用户与词库数据 ---
+const users = { "Fedor": "yct3", "Mia": "yct3", "Dima": "yct3" };
+
+// YCT示例数据 - 等待后续替换
+const allData = {
+    yct1: {
+        1: [
+            { w: "你好", p: "nǐ hǎo", pos: "动", en: "hello", ru: "привет" },
+            { w: "我", p: "wǒ", pos: "代", en: "I, me", ru: "я" },
+            { w: "好", p: "hǎo", pos: "形", en: "good", ru: "хороший" },
+            { w: "谢谢", p: "xiè xie", pos: "动", en: "thank you", ru: "спасибо" },
+            { w: "再见", p: "zài jiàn", pos: "动", en: "goodbye", ru: "до свидания" }
+        ],
+        2: [
+            { w: "爸爸", p: "bà ba", pos: "名", en: "father", ru: "папа" },
+            { w: "妈妈", p: "mā ma", pos: "名", en: "mother", ru: "мама" },
+            { w: "是", p: "shì", pos: "动", en: "to be", ru: "быть" },
+            { w: "老师", p: "lǎo shī", pos: "名", en: "teacher", ru: "учитель" },
+            { w: "学生", p: "xué sheng", pos: "名", en: "student", ru: "студент" }
+        ],
+        3: [
+            { w: "一", p: "yī", pos: "数", en: "one", ru: "один" },
+            { w: "二", p: "èr", pos: "数", en: "two", ru: "два" },
+            { w: "三", p: "sān", pos: "数", en: "three", ru: "три" },
+            { w: "四", p: "sì", pos: "数", en: "four", ru: "четыре" },
+            { w: "五", p: "wǔ", pos: "数", en: "five", ru: "пять" }
+        ],
+        4: [
+            { w: "大", p: "dà", pos: "形", en: "big", ru: "большой" },
+            { w: "小", p: "xiǎo", pos: "形", en: "small", ru: "маленький" },
+            { w: "多", p: "duō", pos: "形", en: "many", ru: "много" },
+            { w: "少", p: "shǎo", pos: "形", en: "few", ru: "мало" },
+            { w: "好", p: "hǎo", pos: "形", en: "good", ru: "хороший" }
+        ]
+    },
+    yct2: {
+        1: [
+            { w: "家", p: "jiā", pos: "名", en: "home, family", ru: "дом, семья" },
+            { w: "学校", p: "xué xiào", pos: "名", en: "school", ru: "школа" },
+            { w: "朋友", p: "péng you", pos: "名", en: "friend", ru: "друг" },
+            { w: "猫", p: "māo", pos: "名", en: "cat", ru: "кошка" },
+            { w: "狗", p: "gǒu", pos: "名", en: "dog", ru: "собака" }
+        ],
+        2: [
+            { w: "吃", p: "chī", pos: "动", en: "eat", ru: "есть" },
+            { w: "喝", p: "hē", pos: "动", en: "drink", ru: "пить" },
+            { w: "看", p: "kàn", pos: "动", en: "look, watch", ru: "смотреть" },
+            { w: "听", p: "tīng", pos: "动", en: "listen", ru: "слушать" },
+            { w: "说", p: "shuō", pos: "动", en: "speak", ru: "говорить" }
+        ],
+        3: [
+            { w: "今天", p: "jīn tiān", pos: "名", en: "today", ru: "сегодня" },
+            { w: "明天", p: "míng tiān", pos: "名", en: "tomorrow", ru: "завтра" },
+            { w: "昨天", p: "zuó tiān", pos: "名", en: "yesterday", ru: "вчера" },
+            { w: "年", p: "nián", pos: "名", en: "year", ru: "год" },
+            { w: "月", p: "yuè", pos: "名", en: "month, moon", ru: "месяц, луна" }
+        ],
+        4: [
+            { w: "红色", p: "hóng sè", pos: "名", en: "red", ru: "красный" },
+            { w: "蓝色", p: "lán sè", pos: "名", en: "blue", ru: "синий" },
+            { w: "黄色", p: "huáng sè", pos: "名", en: "yellow", ru: "жёлтый" },
+            { w: "绿色", p: "lǜ sè", pos: "名", en: "green", ru: "зелёный" },
+            { w: "白色", p: "bái sè", pos: "名", en: "white", ru: "белый" }
+        ]
+    },
+    yct3: {
+        1: [
+            { w: "时间", p: "shí jiān", pos: "名", en: "time", ru: "время" },
+            { w: "天气", p: "tiān qì", pos: "名", en: "weather", ru: "погода" },
+            { w: "学习", p: "xué xí", pos: "动", en: "study", ru: "учиться" },
+            { w: "工作", p: "gōng zuò", pos: "动", en: "work", ru: "работать" },
+            { w: "运动", p: "yùn dòng", pos: "动", en: "exercise", ru: "заниматься спортом" }
+        ],
+        2: [
+            { w: "高兴", p: "gāo xìng", pos: "形", en: "happy", ru: "радостный" },
+            { w: "喜欢", p: "xǐ huan", pos: "动", en: "like", ru: "нравиться" },
+            { w: "爱", p: "ài", pos: "动", en: "love", ru: "любить" },
+            { w: "想", p: "xiǎng", pos: "动", en: "think, want", ru: "думать, хотеть" },
+            { w: "可以", p: "kě yǐ", pos: "助", en: "can, may", ru: "можно" }
+        ],
+        3: [
+            { w: "早上", p: "zǎo shang", pos: "名", en: "morning", ru: "утро" },
+            { w: "中午", p: "zhōng wǔ", pos: "名", en: "noon", ru: "полдень" },
+            { w: "晚上", p: "wǎn shang", pos: "名", en: "evening", ru: "вечер" },
+            { w: "星期", p: "xīng qī", pos: "名", en: "week", ru: "неделя" },
+            { w: "小时", p: "xiǎo shí", pos: "名", en: "hour", ru: "час" }
+        ],
+        4: [
+            { w: "水果", p: "shuǐ guǒ", pos: "名", en: "fruit", ru: "фрукты" },
+            { w: "蔬菜", p: "shū cài", pos: "名", en: "vegetable", ru: "овощи" },
+            { w: "米饭", p: "mǐ fàn", pos: "名", en: "rice", ru: "рис" },
+            { w: "面包", p: "miàn bāo", pos: "名", en: "bread", ru: "хлеб" },
+            { w: "牛奶", p: "niú nǎi", pos: "名", en: "milk", ru: "молоко" }
+        ]
+    },
+    yct4: {
+        1: [
+            { w: "旅行", p: "lǚ xíng", pos: "动", en: "travel", ru: "путешествовать" },
+            { w: "文化", p: "wén huà", pos: "名", en: "culture", ru: "культура" },
+            { w: "历史", p: "lì shǐ", pos: "名", en: "history", ru: "история" },
+            { w: "科学", p: "kē xué", pos: "名", en: "science", ru: "наука" },
+            { w: "艺术", p: "yì shù", pos: "名", en: "art", ru: "искусство" }
+        ],
+        2: [
+            { w: "健康", p: "jiàn kāng", pos: "名", en: "health", ru: "здоровье" },
+            { w: "环境", p: "huán jìng", pos: "名", en: "environment", ru: "окружающая среда" },
+            { w: "社会", p: "shè huì", pos: "名", en: "society", ru: "общество" },
+            { w: "经济", p: "jīng jì", pos: "名", en: "economy", ru: "экономика" },
+            { w: "发展", p: "fā zhǎn", pos: "动", en: "develop", ru: "развиваться" }
+        ],
+        3: [
+            { w: "虽然", p: "suī rán", pos: "连", en: "although", ru: "хотя" },
+            { w: "但是", p: "dàn shì", pos: "连", en: "but", ru: "но" },
+            { w: "因为", p: "yīn wèi", pos: "连", en: "because", ru: "потому что" },
+            { w: "所以", p: "suǒ yǐ", pos: "连", en: "so", ru: "поэтому" },
+            { w: "如果", p: "rú guǒ", pos: "连", en: "if", ru: "если" }
+        ],
+        4: [
+            { w: "建议", p: "jiàn yì", pos: "名", en: "suggestion", ru: "предложение" },
+            { w: "决定", p: "jué dìng", pos: "动", en: "decide", ru: "решать" },
+            { w: "计划", p: "jì huà", pos: "名", en: "plan", ru: "план" },
+            { w: "目标", p: "mù biāo", pos: "名", en: "goal", ru: "цель" },
+            { w: "成功", p: "chéng gōng", pos: "动", en: "succeed", ru: "успех" }
+        ]
+    }
+};
+
+// --- 2. 核心状态管理 ---
+let G = { 
+    lvl: 1, 
+    unit: 1, 
+    step: 1, 
+    matched: 0, 
+    errors: 0, 
+    start: 0, 
+    selL: null, 
+    selR: null, 
+    wrongList: [], // 错词列表
+    mistakeItems: [] // 详细错词记录
+};
+
+// --- 3. 首页渲染逻辑 ---
+function renderLevelSelector() {
+    const box = document.getElementById('levelSelector');
+    let html = '';
+    for(let i=1; i<=4; i++) { // YCT只有4个级别
+        const locked = (i >= 3 && !G.user);
+        html += `<button class="lvl-btn ${G.lvl === i ? 'active' : ''}" onclick="selectLevel(${i})">
+            YCT ${i} ${locked ? '🔒' : ''}
+        </button>`;
+    }
+    box.innerHTML = html;
+}
+
+function selectLevel(n) {
+    if(n >= 3 && !G.user) {
+        document.getElementById('loginView').style.display = 'flex';
+        return;
+    }
+    G.lvl = n;
+    renderLevelSelector();
+    renderGrid();
+}
+
+function renderGrid() {
+    const grid = document.getElementById('unitGrid');
+    const icons = ["🐼", "🐨", "📚", "✨", "🍎", "🎨", "🚀", "🌈", "🐱", "🦊", "🦁", "🎒"];
+    const levelData = allData[`yct${G.lvl}`] || {};
+    const units = Object.keys(levelData);
+
+    if(units.length === 0) {
+        grid.innerHTML = '<p style="text-align:center; grid-column:1/-1; color:#999;">Units coming soon...</p>';
+        return;
+    }
+
+    grid.innerHTML = units.map((u, i) => `
+        <div class="unit-card" onclick="startUnit(${u})">
+            <span class="unit-emoji">${icons[i % icons.length]}</span>
+            <span>Unit ${u}</span>
+        </div>
+    `).join('');
+}
+
+// --- 4. 登录逻辑 ---
+function checkLogin() {
+    const u = document.getElementById('username').value;
+    const p = document.getElementById('password').value;
+    if(users[u] && users[u] === p) {
+        G.user = u;
+        document.getElementById('loginView').style.display = 'none';
+        renderLevelSelector();
+        renderGrid();
+    } else {
+        document.getElementById('loginError').style.display = 'block';
+    }
+}
+
+// --- 5. 游戏引擎逻辑 ---
+function startUnit(id) {
+    G.unit = id; 
+    G.step = 1; 
+    G.errors = 0; 
+    G.start = Date.now();
+    G.wrongList = []; // 重置错词列表
+    G.mistakeItems = []; // 重置详细错词记录
+    
+    document.getElementById('homeView').style.display = 'none';
+    document.getElementById('gameView').style.display = 'block';
+    document.getElementById('unitTitle').innerText = `YCT ${G.lvl} - Unit ${id}`;
+    
+    // 隐藏错词面板
+    document.getElementById('mistakesPanel').style.display = 'none';
+    
+    initStep();
+}
+
+function initStep() {
+    G.matched = 0; 
+    G.selL = null; 
+    G.selR = null;
+    const nextBtn = document.getElementById('nextBtn');
+    nextBtn.style.background = '#ccc';
+    nextBtn.style.cursor = 'not-allowed';
+    
+    const isPinyin = G.step <= 5;
+    document.getElementById('modeTag').innerText = isPinyin ? "Hanzi ↔ Pinyin" : "Hanzi ↔ Translation";
+    
+    const pool = allData[`yct${G.lvl}`][G.unit];
+    
+    // --- 核心优化：防同音字逻辑开始 ---
+    let words = [];
+    let usedPinyin = new Set(); // 记录已经选进去的拼音
+    
+    // 先把池子里的词随机打乱
+    let shuffledPool = [...pool].sort(() => Math.random() - 0.5);
+    
+    for (let item of shuffledPool) {
+        // 如果是拼音模式，检查拼音是否已经存在于这一组中
+        if (isPinyin) {
+            if (!usedPinyin.has(item.p)) {
+                words.push(item);
+                usedPinyin.add(item.p);
+            }
+        } else {
+            // 如果是翻译模式，通常不需要防重音，直接加进去
+            words.push(item);
+        }
+        
+        // 凑够5个就停止
+        if (words.length === 5) break;
+    }
+    
+    // 保底机制：如果词库太小，挑了半天凑不够5个不重音的词，就还是按原样补齐
+    if (words.length < 5) {
+        words = shuffledPool.slice(0, 5);
+    }
+    // --- 防同音字逻辑结束 ---
+    
+    const lCol = document.getElementById('leftCol');
+    const rCol = document.getElementById('rightCol');
+    lCol.innerHTML = ''; rCol.innerHTML = '';
+    
+    // 渲染左侧（汉字）
+    words.forEach(item => {
+        const d = document.createElement('div'); 
+        d.className = 'card'; 
+        d.innerText = item.w;
+        d.onclick = () => handleSelect('L', item, d); 
+        lCol.appendChild(d);
+    });
+    
+    // 渲染右侧（拼音或翻译）
+    [...words].sort(() => Math.random() - 0.5).forEach(item => {
+        const d = document.createElement('div'); 
+        d.className = 'card';
+        d.innerText = isPinyin ? item.p : `${item.en} / ${item.ru}`;
+        d.onclick = () => handleSelect('R', item, d); 
+        rCol.appendChild(d);
+    });
+    
+    // 更新进度显示
+    document.getElementById('progress').innerText = `Progress: ${G.matched}/5`;
+}
+
+function handleSelect(side, data, el) {
+    if(el.classList.contains('correct')) return;
+    
+    if(side === 'L') {
+        document.querySelectorAll('#leftCol .card').forEach(c => c.classList.remove('selected'));
+        G.selL = { data, el };
+    } else {
+        document.querySelectorAll('#rightCol .card').forEach(c => c.classList.remove('selected'));
+        G.selR = { data, el };
+    }
+    el.classList.add('selected');
+
+    if(G.selL && G.selR) {
+        if(G.selL.data.w === G.selR.data.w) {
+            // 匹配正确
+            G.selL.el.className = 'card correct';
+            G.selR.el.className = 'card correct';
+            G.matched++;
+            document.getElementById('progress').innerText = `Progress: ${G.matched}/5`;
+            if(G.matched === 5) {
+                document.getElementById('nextBtn').style.background = 'var(--success)';
+                document.getElementById('nextBtn').style.cursor = 'pointer';
+            }
+        } else {
+            // 匹配错误 - 记录错词
+            G.errors++;
+            
+            // 记录错词（避免重复）
+            if (!G.wrongList.includes(G.selL.data.w)) {
+                G.wrongList.push(G.selL.data.w);
+            }
+            
+            // 记录详细错词信息
+            const mistakeItem = {
+                hanzi: G.selL.data.w,
+                pinyin: G.selL.data.p,
+                english: G.selL.data.en,
+                russian: G.selL.data.ru,
+                timestamp: new Date().toLocaleTimeString(),
+                mode: G.step <= 5 ? '拼音' : '翻译'
+            };
+            
+            // 检查是否已存在相同错词
+            const exists = G.mistakeItems.some(item => item.hanzi === mistakeItem.hanzi);
+            if (!exists) {
+                G.mistakeItems.push(mistakeItem);
+                updateMistakesPanel();
+            }
+            
+            // 错误动画效果
+            const l = G.selL.el; 
+            const r = G.selR.el;
+            l.style.borderColor = 'var(--error)';
+            r.style.borderColor = 'var(--error)';
+            
+            setTimeout(() => { 
+                l.classList.remove('selected'); 
+                r.classList.remove('selected');
+                l.style.borderColor = '';
+                r.style.borderColor = '';
+            }, 400);
+        }
+        G.selL = null; 
+        G.selR = null;
+    }
+}
+
+// 更新错词面板
+function updateMistakesPanel() {
+    const mistakesPanel = document.getElementById('mistakesPanel');
+    const mistakesList = document.getElementById('mistakesList');
+    const mistakeCount = document.getElementById('mistakeCount');
+    
+    if (G.mistakeItems.length > 0) {
+        mistakesPanel.style.display = 'block';
+        mistakeCount.textContent = G.mistakeItems.length;
+        
+        // 清空现有内容
+        mistakesList.innerHTML = '';
+        
+        // 添加错词项
+        G.mistakeItems.forEach((item, index) => {
+            const mistakeDiv = document.createElement('div');
+            mistakeDiv.className = 'mistake-item';
+            mistakeDiv.innerHTML = `
+                <span class="mistake-hanzi">${item.hanzi}</span>
+                <span class="mistake-pinyin">${item.pinyin}</span>
+                <span class="mistake-translation">${item.english}</span>
+            `;
+            mistakesList.appendChild(mistakeDiv);
+        });
+    } else {
+        mistakesPanel.style.display = 'none';
+    }
+}
+
+// 清空错词
+function clearMistakes() {
+    G.mistakeItems = [];
+    G.wrongList = [];
+    updateMistakesPanel();
+}
+
+function nextLevel() {
+    if(G.matched < 5) return;
+    if(G.step < 10) { 
+        G.step++; 
+        initStep(); 
+    } else { 
+        showReport(); 
+    }
+}
+
+function showReport() {
+    const time = Math.floor((Date.now() - G.start)/1000);
+    document.getElementById('reportOverlay').style.display = 'flex';
+    
+    let reportHtml = `
+        <h2 style="margin-top:0">Unit Complete!</h2>
+        <div style="text-align:left; background:#f8f9fa; padding:15px; border-radius:10px; margin-bottom:15px;">
+            <strong>Level:</strong> YCT ${G.lvl}<br>
+            <strong>Unit:</strong> ${G.unit}<br>
+            <strong>Time:</strong> ${time} seconds<br>
+            <strong>Total Errors:</strong> <span style="color:var(--error)">${G.errors}</span> times
+        </div>
+    `;
+
+    // 错词回顾部分
+    const mistakesReview = document.getElementById('mistakesReview');
+    const reviewList = document.getElementById('reviewList');
+    
+    if (G.mistakeItems.length > 0) {
+        reportHtml += `<p style="color:var(--error); font-weight:bold;">You made ${G.mistakeItems.length} mistakes!</p>`;
+        
+        // 显示错词回顾
+        mistakesReview.style.display = 'block';
+        
+        let reviewHtml = '';
+        G.mistakeItems.forEach((item, index) => {
+            reviewHtml += `
+                <div style="padding: 8px; border-bottom: 1px solid #eee; ${index === G.mistakeItems.length - 1 ? 'border-bottom: none;' : ''}">
+                    <div style="font-weight: bold; font-size: 16px;">${item.hanzi}</div>
+                    <div style="font-size: 12px; color: #666;">${item.pinyin}</div>
+                    <div style="font-size: 12px; color: #888;">
+                        <span>${item.english}</span> | 
+                        <span>${item.russian}</span>
+                    </div>
+                    <div style="font-size: 10px; color: #aaa; margin-top: 4px;">
+                        Mode: ${item.mode} | Time: ${item.timestamp}
+                    </div>
+                </div>
+            `;
+        });
+        reviewList.innerHTML = reviewHtml;
+    } else {
+        reportHtml += `<p style="color:var(--success); font-weight:bold;">Perfect! No mistakes!</p>`;
+        mistakesReview.style.display = 'none';
+    }
+
+    document.getElementById('reportContent').innerHTML = reportHtml;
+}
+
+function goHome() {
+    document.getElementById('gameView').style.display = 'none';
+    document.getElementById('reportOverlay').style.display = 'none';
+    document.getElementById('homeView').style.display = 'block';
+    renderGrid();
+}
+
+// --- 6. 自动计时器 ---
+setInterval(() => {
+    if(document.getElementById('gameView').style.display === 'block') {
+        const d = Math.floor((Date.now()-G.start)/1000);
+        document.getElementById('timer').innerText = `${String(Math.floor(d/60)).padStart(2,'0')}:${String(d%60).padStart(2,'0')}`;
+    }
+}, 1000);
+
+// --- 7. 启动 ---
+renderLevelSelector();
+renderGrid();
+</script>
+</body>
+</html>

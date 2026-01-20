@@ -1,0 +1,1605 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>HSK Vocabulary Mastery</title>
+    <style>
+        :root { --primary: #1890ff; --success: #52c41a; --error: #ff4d4f; --bg: #f0f2f5; }
+        body { font-family: 'PingFang SC', sans-serif; background: var(--bg); margin: 0; padding: 20px; }
+        .container { max-width: 1000px; margin: 0 auto; }
+        
+        /* 登录遮罩 */
+        #loginView {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); z-index: 2000; justify-content: center; align-items: center;
+        }
+        .login-box { background: white; padding: 40px; border-radius: 20px; text-align: center; width: 320px; }
+        .login-box input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+
+        .main-title { text-align: center; font-size: 32px; color: #2f54eb; margin-top: 20px; font-weight: 800; }
+        #levelSelector { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin: 30px 0; }
+        
+        .lvl-btn { padding: 10px 20px; border-radius: 20px; border: 2px solid #ddd; background: white; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        .lvl-btn.active { border-color: var(--primary); background: #e6f7ff; color: var(--primary); box-shadow: 0 4px 12px rgba(24,144,255,0.2); }
+
+        .unit-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 20px; padding: 20px; }
+        .unit-card { 
+            background: white; padding: 25px; border-radius: 18px; text-align: center; cursor: pointer; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05); transition: 0.3s; border: 2px solid transparent; 
+        }
+        .unit-card:hover { transform: translateY(-5px); border-color: var(--primary); }
+        .unit-emoji { font-size: 45px; margin-bottom: 10px; display: block; }
+
+        #gameView { display: none; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); }
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #f0f0f0; padding-bottom: 15px; }
+        .game-area { display: flex; justify-content: space-around; min-height: 450px; margin-top: 20px; }
+        .column { display: flex; flex-direction: column; gap: 12px; width: 45%; }
+        .card { padding: 15px; background: #fff; border: 2px solid #e8e8e8; border-radius: 12px; cursor: pointer; text-align: center; min-height: 65px; display: flex; align-items: center; justify-content: center; font-size: 18px; transition: 0.2s; }
+        .card.selected { background: #e6f7ff; border-color: var(--primary); color: var(--primary); }
+        .card.correct { background: #f6ffed; border-color: var(--success); color: var(--success); cursor: default; }
+        
+        #reportOverlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:3000; justify-content:center; align-items:center; }
+        .report-box { background:white; padding:40px; border-radius:25px; text-align:center; width: 85%; max-width: 400px; }
+        
+        /* 错词统计样式 */
+        #mistakesPanel {
+            display: none;
+            background: white;
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 12px;
+            border-left: 4px solid var(--error);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .mistakes-title {
+            font-weight: bold;
+            color: var(--error);
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .mistakes-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        
+        .mistake-item {
+            background: #fff2f0;
+            border: 1px solid #ffccc7;
+            border-radius: 6px;
+            padding: 8px 12px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .mistake-hanzi {
+            font-weight: bold;
+            font-size: 16px;
+        }
+        
+        .mistake-pinyin {
+            color: #666;
+            font-size: 12px;
+        }
+        
+        .mistake-translation {
+            color: #888;
+            font-size: 12px;
+        }
+        
+        .clear-mistakes-btn {
+            background: none;
+            border: none;
+            color: var(--error);
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        .mistake-count {
+            background: var(--error);
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            margin-left: 8px;
+        }
+    </style>
+</head>
+<body>
+
+<div id="loginView">
+    <div class="login-box">
+        <h2 style="color:var(--primary)">🐼 Student Login</h2>
+        <p style="color:#888; font-size:14px;">Please login for HSK 3-9</p>
+        <input type="text" id="username" placeholder="Name / Имя">
+        <input type="password" id="password" placeholder="Password / Пароль">
+        <button class="lvl-btn active" style="width:100%" onclick="checkLogin()">Login / Вход</button>
+        <p id="loginError" style="color:var(--error); display:none; margin-top:10px;">Error Login!</p>
+    </div>
+</div>
+
+<div class="container">
+    <div id="homeView">
+        <h1 class="main-title">🌟 HSK Vocabulary 🐼</h1>
+        <div id="levelSelector"></div>
+        <div class="unit-grid" id="unitGrid"></div>
+    </div>
+
+    <div id="gameView">
+        <div class="header">
+            <button class="lvl-btn" onclick="goHome()">← Back</button>
+            <div style="text-align:center">
+                <h2 id="unitTitle" style="margin:0;">Unit</h2>
+                <div id="modeTag" style="color:var(--primary); font-size:13px; font-weight:bold;"></div>
+            </div>
+            <div id="timer" style="font-family:monospace; font-weight:bold;">00:00</div>
+        </div>
+        
+        <!-- 错词统计面板 -->
+        <div id="mistakesPanel">
+            <div class="mistakes-title">
+                <span>错词统计 <span id="mistakeCount" class="mistake-count">0</span></span>
+                <button class="clear-mistakes-btn" onclick="clearMistakes()">清空</button>
+            </div>
+            <div id="mistakesList" class="mistakes-list">
+                <!-- 错词将在这里显示 -->
+            </div>
+        </div>
+        
+        <div class="game-area">
+            <div class="column" id="leftCol"></div>
+            <div class="column" id="rightCol"></div>
+        </div>
+        <div class="footer" style="display:flex; justify-content:space-between; margin-top:30px; align-items:center;">
+            <div id="progress" style="font-weight:bold; color:#666;">Progress: 0/5</div>
+            <button id="nextBtn" class="lvl-btn" style="background:#ccc; color:white; cursor:not-allowed;" onclick="nextLevel()">Next Level</button>
+        </div>
+    </div>
+</div>
+
+<div id="reportOverlay">
+    <div class="report-box">
+        <h2 style="color:var(--success)">Well Done! 🎉</h2>
+        <div id="reportContent" style="margin:20px 0; font-size:18px; line-height:1.8;"></div>
+        <!-- 错词回顾部分 -->
+        <div id="mistakesReview" style="margin: 20px 0; text-align: left; display: none;">
+            <h3 style="color: var(--error); margin-top: 0;">错词回顾</h3>
+            <div id="reviewList" style="max-height: 200px; overflow-y: auto; padding: 10px; background: #f8f9fa; border-radius: 8px;"></div>
+        </div>
+        <button class="lvl-btn active" style="width:100%" onclick="goHome()">Back to Home</button>
+    </div>
+</div>
+
+<script>
+// --- 1. 用户与词库数据 ---
+const users = { "Fedor": "hsk3", "Mia": "hsk3", "Dima": "hsk3" };
+
+const allData = {
+    hsk1: {
+        1: [
+            { w: "爱", p: "ài", pos: "动", en: "love", ru: "любить" },
+            { w: "八", p: "bā", pos: "数", en: "eight", ru: "восемь" },
+            { w: "吧", p: "ba", pos: "助", en: "modal particle", ru: "фразовая частица" },
+            { w: "爸爸", p: "bà ba", pos: "名", en: "father", ru: "папа" },
+            { w: "百", p: "bǎi", pos: "数", en: "hundred", ru: "сто" },
+            { w: "白天", p: "bái tiān", pos: "名", en: "daytime", ru: "день" },
+            { w: "半", p: "bàn", pos: "数", en: "half", ru: "половина" },
+            { w: "包子", p: "bāo zi", pos: "名", en: "steamed stuffed bun", ru: "баоцзы; пирожки на пару" },
+            { w: "杯子", p: "bēi zi", pos: "名", en: "cup; glass", ru: "стакан; чашка" },
+            { w: "本", p: "běn", pos: "量", en: "copy; issue", ru: "счётное слово для книг" },
+            { w: "边", p: "biān", pos: "名", en: "side", ru: "сторона" },
+            { w: "病", p: "bìng", pos: "名、动", en: "disease; be ill", ru: "болезнь; болеть" },
+            { w: "不", p: "bù", pos: "副", en: "not; no", ru: "не; нет" },
+            { w: "不客气", p: "bú kè qi", pos: "动", en: "you're welcome", ru: "не за что; пожалуйста" },
+            { w: "不要", p: "bú yào", pos: "动", en: "don't", ru: "не надо; не нужно" },
+            { w: "菜", p: "cài", pos: "名", en: "dish; vegetable", ru: "блюдо; овощи" },
+            { w: "茶", p: "chá", pos: "名", en: "tea", ru: "чай" },
+            { w: "唱", p: "chàng", pos: "动", en: "sing", ru: "петь" },
+            { w: "超市", p: "chāo shì", pos: "名", en: "supermarket", ru: "супермаркет" },
+            { w: "车", p: "chē", pos: "名", en: "vehicle", ru: "машина" },
+            { w: "吃", p: "chī", pos: "动", en: "eat", ru: "есть; кушать" },
+            { w: "出租车", p: "chū zū chē", pos: "名", en: "taxi", ru: "такси" },
+            { w: "穿", p: "chuān", pos: "动", en: "wear", ru: "надевать; носить" },
+            { w: "大", p: "dà", pos: "形", en: "big; large", ru: "большой" },
+            { w: "打电话", p: "dǎ diàn huà", pos: "动", en: "make a phone call", ru: "звонить по телефону" },
+            { w: "大家", p: "dà jiā", pos: "代", en: "everyone", ru: "все" },
+            { w: "大学", p: "dà xué", pos: "名", en: "university", ru: "университет" },
+            { w: "大学生", p: "dà xué shēng", pos: "名", en: "university student", ru: "студент" },
+            { w: "到", p: "dào", pos: "动", en: "arrive; reach", ru: "прибывать; до" }
+        ],
+2: [
+            { w: "的", p: "de", pos: "助", en: "of", ru: "служебная частица" },
+            { w: "第", p: "dì", pos: "助", en: "auxiliary word", ru: "показатель порядкового числительного" },
+            { w: "弟弟", p: "dì di", pos: "名", en: "younger brother", ru: "младший брат" },
+            { w: "点", p: "diǎn", pos: "名、量", en: "o'clock; dot", ru: "час; точка" },
+            { w: "店", p: "diàn", pos: "名", en: "shop; store", ru: "магазин" },
+            { w: "点儿", p: "diǎnr", pos: "量", en: "a little", ru: "немного" },
+            { w: "电话", p: "diàn huà", pos: "名", en: "telephone", ru: "телефон" },
+            { w: "电脑", p: "diàn nǎo", pos: "名", en: "computer", ru: "компьютер" },
+            { w: "电视", p: "diàn shì", pos: "名", en: "television", ru: "телевизор" },
+            { w: "电影", p: "diàn yǐng", pos: "名", en: "movie", ru: "фильм" },
+            { w: "电影院", p: "diàn yǐng yuàn", pos: "名", en: "cinema", ru: "кинотеатр" },
+            { w: "东西", p: "dōng xi", pos: "名", en: "thing; object", ru: "вещь; предмет" },
+            { w: "都", p: "dōu", pos: "副", en: "all; both", ru: "все; оба" },
+            { w: "读", p: "dú", pos: "动", en: "read", ru: "читать" },
+            { w: "读书", p: "dú shū", pos: "动", en: "read a book; study", ru: "читать; учиться" },
+            { w: "对", p: "duì", pos: "形、介", en: "correct; towards", ru: "правильный; к; в сторону" },
+            { w: "对不起", p: "duì bu qǐ", pos: "动", en: "I'm sorry", ru: "извините; простите" },
+            { w: "多", p: "duō", pos: "形、副", en: "many; much; how", ru: "много; насколько" },
+            { w: "多少", p: "duō shǎo", pos: "代", en: "how many; how much", ru: "сколько" },
+            { w: "二", p: "èr", pos: "数", en: "two", ru: "два" },
+            { w: "儿子", p: "ér zi", pos: "名", en: "son", ru: "сын" },
+            { w: "饭", p: "fàn", pos: "名", en: "meal; rice", ru: "еда; варёный рис" },
+            { w: "饭店", p: "fàn diàn", pos: "名", en: "restaurant; hotel", ru: "ресторан; отель" },
+            { w: "房间", p: "fáng jiān", pos: "名", en: "room", ru: "комната" },
+            { w: "非常", p: "fēi cháng", pos: "副", en: "very", ru: "очень; чрезвычайно" },
+            { w: "飞机", p: "fēi jī", pos: "名", en: "plane", ru: "самолёт" },
+            { w: "分", p: "fēn", pos: "量、动", en: "minute; cent; divide", ru: "минута; цент; делить" },
+            { w: "分钟", p: "fēn zhōng", pos: "量", en: "minute", ru: "минута" },
+            { w: "高兴", p: "gāo xìng", pos: "形", en: "happy; glad", ru: "радостный" },
+            { w: "歌", p: "gē", pos: "名", en: "song", ru: "песня" }
+        ],
+3: [
+            { w: "个", p: "gè", pos: "量", en: "general measure word", ru: "универсальное счётное слово" },
+            { w: "哥哥", p: "gē ge", pos: "名", en: "elder brother", ru: "старший брат" },
+            { w: "给", p: "gěi", pos: "动、介", en: "give; to", ru: "давать; предл. кому/чему" },
+            { w: "公司", p: "gōng sī", pos: "名", en: "company", ru: "компания; фирма" },
+            { w: "工作", p: "gōng zuò", pos: "名、动", en: "job; work", ru: "работа; работать" },
+            { w: "狗", p: "gǒu", pos: "名", en: "dog", ru: "собака" },
+            { w: "贵", p: "guì", pos: "形", en: "expensive", ru: "дорогой" },
+            { w: "国", p: "guó", pos: "名", en: "country", ru: "страна; государство" },
+            { w: "还", p: "hái", pos: "副", en: "still; also", ru: "ещё; всё ещё" },
+            { w: "孩子", p: "hái zi", pos: "名", en: "child", ru: "ребёнок; дети" },
+            { w: "汉语", p: "hàn yǔ", pos: "名", en: "Chinese language", ru: "китайский язык" },
+            { w: "汉字", p: "hàn zì", pos: "名", en: "Chinese character", ru: "иероглиф" },
+            { w: "好", p: "hǎo", pos: "形", en: "good; well", ru: "хорошо" },
+            { w: "号", p: "hào", pos: "名、量", en: "number; date", ru: "номер; число" },
+            { w: "好吃", p: "hǎo chī", pos: "形", en: "delicious", ru: "вкусный" },
+            { w: "好看", p: "hǎo kàn", pos: "形", en: "good-looking", ru: "красивый" },
+            { w: "好听", p: "hǎo tīng", pos: "形", en: "pleasant to hear", ru: "приятный на слух" },
+            { w: "好玩儿", p: "hǎo wánr", pos: "形", en: "fun", ru: "интересный; весёлый" },
+            { w: "喝", p: "hē", pos: "动", en: "drink", ru: "пить" },
+            { w: "和", p: "hé", pos: "连、介", en: "and; with", ru: "и; с" },
+            { w: "很", p: "hěn", pos: "副", en: "very", ru: "очень" },
+            { w: "后", p: "hòu", pos: "名", en: "back; behind", ru: "после; позади" },
+            { w: "回", p: "huí", pos: "动、量", en: "return; time", ru: "возвращаться; раз" },
+            { w: "会", p: "huì", pos: "助、动", en: "can; meet", ru: "уметь; собираться" },
+            { w: "火车", p: "huǒ chē", pos: "名", en: "train", ru: "поезд" },
+            { w: "几", p: "jǐ", pos: "代", en: "how many", ru: "сколько" },
+            { w: "鸡蛋", p: "jī dàn", pos: "名", en: "egg", ru: "яйцо" }
+        ],
+4: [
+            { w: "家", p: "jiā", pos: "名、量", en: "family; home; [MW]", ru: "семья; дом; [сч. сл.]" },
+            { w: "家人", p: "jiā rén", pos: "名", en: "family member", ru: "члены семьи" },
+            { w: "见", p: "jiàn", pos: "动", en: "see; meet", ru: "видеть; встречаться" },
+            { w: "件", p: "jiàn", pos: "量", en: "piece", ru: "счётное слово для одежды" },
+            { w: "叫", p: "jiào", pos: "动", en: "call", ru: "звать" },
+            { w: "饺子", p: "jiǎo zi", pos: "名", en: "dumpling", ru: "пельмени" },
+            { w: "姐姐", p: "jiě jie", pos: "名", en: "elder sister", ru: "старшая сестра" },
+            { w: "今年", p: "jīn nián", pos: "名", en: "this year", ru: "этот год" },
+            { w: "今天", p: "jīn tiān", pos: "名", en: "today", ru: "сегодня" },
+            { w: "九", p: "jiǔ", pos: "数", en: "nine", ru: "девять" },
+            { w: "觉得", p: "jué de", pos: "动", en: "feel; think", ru: "чувствовать; думать" },
+            { w: "开", p: "kāi", pos: "动", en: "open; drive", ru: "открывать; водить" },
+            { w: "开车", p: "kāi chē", pos: "动", en: "drive a car", ru: "водить машину" },
+            { w: "看", p: "kàn", pos: "动", en: "look; watch", ru: "смотреть" },
+            { w: "看病", p: "kàn bìng", pos: "动", en: "see a doctor", ru: "консультироваться у врача" },
+            { w: "看见", p: "kàn jiàn", pos: "动", en: "see", ru: "видеть" },
+            { w: "课", p: "kè", pos: "名", en: "class; lesson", ru: "урок" },
+            { w: "可以", p: "kě yǐ", pos: "助", en: "can; may", ru: "можно" },
+            { w: "口", p: "kǒu", pos: "名、量", en: "mouth; [MW]", ru: "рот; [сч. сл.]" },
+            { w: "块", p: "kuài", pos: "量", en: "piece; [MW for money]", ru: "кусок; [сч. сл. для денег]" },
+            { w: "来", p: "lái", pos: "动", en: "come", ru: "приходить" },
+            { w: "老师", p: "lǎo shī", pos: "名", en: "teacher", ru: "учитель" },
+            { w: "了", p: "le", pos: "助", en: "modal particle", ru: "фразовая частица" },
+            { w: "冷", p: "lěng", pos: "形", en: "cold", ru: "холодный" },
+            { w: "里", p: "lǐ", pos: "名", en: "inside", ru: "внутри" },
+            { w: "两", p: "liǎng", pos: "数", en: "two", ru: "два" },
+            { w: "零", p: "líng", pos: "数", en: "zero", ru: "ноль" },
+            { w: "六", p: "liù", pos: "数", en: "six", ru: "шесть" }
+        ],
+5: [
+            { w: "吗", p: "ma", pos: "助", en: "[makes a yes; no question]", ru: "вопросительная частица" }, //
+            { w: "妈妈", p: "mā ma", pos: "名", en: "mother", ru: "мама" }, //
+            { w: "买", p: "mǎi", pos: "动", en: "buy", ru: "покупать" }, //
+            { w: "卖", p: "mài", pos: "动", en: "to sell", ru: "продавать" }, //
+            { w: "忙", p: "máng", pos: "形、动", en: "busy", ru: "занятой" }, //
+            { w: "猫", p: "māo", pos: "名", en: "cat", ru: "кошка" }, //
+            { w: "没", p: "méi", pos: "动、副", en: "don't", ru: "не (иметь)" }, //
+            { w: "没关系", p: "méi guān xi", pos: "", en: "no problem", ru: "ничего страшного" }, //
+            { w: "妹妹", p: "mèi mei", pos: "名", en: "younger sister", ru: "младшая сестра" }, //
+            { w: "没事", p: "méi shì", pos: "动", en: "it's ok", ru: "ничего; всё в порядке" }, //
+            { w: "们", p: "men", pos: "后缀", en: "we", ru: "суффикс множественного числа" }, //
+            { w: "米饭", p: "mǐ fàn", pos: "名", en: "rice [cooked; boiled]", ru: "вареный рис" }, //
+            { w: "面包", p: "miàn bāo", pos: "名", en: "bread", ru: "хлеб" }, //
+            { w: "面条儿", p: "miàn tiáo er", pos: "名", en: "noodle", ru: "лапша" }, //
+            { w: "明年", p: "míng nián", pos: "名", en: "next year", ru: "следующий год" }, //
+            { w: "明天", p: "míng tiān", pos: "名", en: "tomorrow", ru: "завтра" }, //
+            { w: "名字", p: "míng zi", pos: "名", en: "given name", ru: "имя" }, //
+            { w: "哪", p: "nǎ", pos: "代", en: "which?", ru: "какой; который" }, //
+            { w: "那", p: "nà", pos: "代", en: "that", ru: "тот; то" }, //
+            { w: "那边", p: "nà biān", pos: "代", en: "that place", ru: "вон там" }, //
+            { w: "哪儿", p: "nǎ er", pos: "代", en: "where?", ru: "где; куда" }, //
+            { w: "那儿", p: "nà er", pos: "代", en: "over there", ru: "там; туда" }, //
+            { w: "哪个", p: "nǎ gè", pos: "代", en: "which one", ru: "который" }, //
+            { w: "那个", p: "nà gè", pos: "代", en: "that one", ru: "тот" }, //
+            { w: "哪里", p: "nǎ lǐ", pos: "代", en: "where", ru: "где" }, //
+            { w: "那里", p: "nà lǐ", pos: "代", en: "that", ru: "там" }, //
+            { w: "哪些", p: "nǎ xiē", pos: "代", en: "which", ru: "какие" }, //
+            { w: "那些", p: "nà xiē", pos: "代", en: "those", ru: "те" }, //
+            { w: "男", p: "nán", pos: "形", en: "male", ru: "мужчина; мужской" }, //
+            { w: "男朋友", p: "nán péng you", pos: "名", en: "boyfriend", ru: "парень (бойфренд)" }, //
+            { w: "呢", p: "ne", pos: "助", en: "[returns; forwards a question]", ru: "фразовая частица" } //
+        ],
+6: [
+            { w: "能", p: "néng", pos: "动", en: "to be able to; can", ru: "мочь; уметь" },
+            { w: "你", p: "nǐ", pos: "代", en: "you", ru: "ты" },
+            { w: "你好", p: "nǐ hǎo", pos: "", en: "hello", ru: "здравствуй; привет" },
+            { w: "你们", p: "nǐ men", pos: "代", en: "you", ru: "вы" },
+            { w: "年", p: "nián", pos: "名、量", en: "year", ru: "год" },
+            { w: "您", p: "nín", pos: "代", en: "you [polite form]", ru: "Вы (вежливая форма)" },
+            { w: "牛奶", p: "niú nǎi", pos: "名", en: "milk", ru: "молоко" },
+            { w: "女", p: "nǚ", pos: "形", en: "female", ru: "женщина; женский" },
+            { w: "女儿", p: "nǚ ér", pos: "名", en: "daughter", ru: "дочь" },
+            { w: "女朋友", p: "nǚ péng you", pos: "名", en: "girlfriend", ru: "девушка (подруга)" },
+            { w: "女士", p: "nǚ shì", pos: "名", en: "lady; Madam; Miss", ru: "госпожа; дама" },
+            { w: "朋友", p: "péng you", pos: "名", en: "friend", ru: "друг" },
+            { w: "便宜", p: "pián yi", pos: "形", en: "cheap", ru: "дешевый" },
+            { w: "漂亮", p: "piào liang", pos: "形", en: "beautiful", ru: "красивый" },
+            { w: "苹果", p: "píng guǒ", pos: "名", en: "apple", ru: "яблоко" },
+            { w: "七", p: "qī", pos: "数", en: "seven", ru: "семь" },
+            { w: "起床", p: "qǐ chuáng", pos: "动", en: "get up (out of bed)", ru: "вставать (с постели)" },
+            { w: "千", p: "qiān", pos: "数", en: "thousand", ru: "тысяча" },
+            { w: "前", p: "qián", pos: "名", en: "front", ru: "впереди; передний" },
+            { w: "钱", p: "qián", pos: "名", en: "money", ru: "деньги" },
+            { w: "请", p: "qǐng", pos: "动", en: "to invite; please", ru: "просить; приглашать; пожалуйста" },
+            { w: "请问", p: "qǐng wèn", pos: "动", en: "excuse me", ru: "позвольте спросить" },
+            { w: "去", p: "qù", pos: "动", en: "to go", ru: "идти; уходить" },
+            { w: "去年", p: "qù nián", pos: "名", en: "last year", ru: "прошлый год" },
+            { w: "热", p: "rè", pos: "形", en: "hot", ru: "горячий; жаркий" },
+            { w: "人", p: "rén", pos: "名", en: "person; people", ru: "человек; люди" },
+            { w: "认识", p: "rèn shi", pos: "动", en: "to know [be familiar with]", ru: "знать; быть знакомым" },
+            { w: "日", p: "rì", pos: "量", en: "day [date]; sun", ru: "день; число" },
+            { w: "三", p: "sān", pos: "数", en: "three", ru: "три" },
+            { w: "上", p: "shàng", pos: "名、动", en: "up; above", ru: "верх; подниматься" },
+            { w: "上班", p: "shàng bān", pos: "动", en: "start work", ru: "идти на работу" }
+        ],
+7: [
+            { w: "商店", p: "shāng diàn", pos: "名", en: "shop", ru: "магазин" },
+            { w: "上课", p: "shàng kè", pos: "动", en: "have class", ru: "проводить занятия; ходить на занятия" },
+            { w: "上午", p: "shàng wǔ", pos: "名", en: "morning", ru: "утро (до полудня)" },
+            { w: "上学", p: "shàng xué", pos: "动", en: "go to school", ru: "учиться в школе" },
+            { w: "少", p: "shǎo", pos: "形、动", en: "few", ru: "мало; немногочисленный" },
+            { w: "谁", p: "shéi", pos: "代", en: "who?", ru: "кто" },
+            { w: "什么", p: "shén me", pos: "代", en: "what?", ru: "что; какой" },
+            { w: "生病", p: "shēng bìng", pos: "动", en: "ill; sick; unwell", ru: "болеть; заболеть" },
+            { w: "十", p: "shí", pos: "数", en: "ten", ru: "десять" },
+            { w: "事", p: "shì", pos: "名", en: "thing", ru: "дело; событие" },
+            { w: "是", p: "shì", pos: "动", en: "to be", ru: "быть; являться" },
+            { w: "时候", p: "shí hou", pos: "名", en: "[duration of] time", ru: "время; промежуток времени" },
+            { w: "时间", p: "shí jiān", pos: "名", en: "time", ru: "время" },
+            { w: "手机", p: "shǒu jī", pos: "名", en: "mobile phone", ru: "мобильный телефон" },
+            { w: "书", p: "shū", pos: "名", en: "book", ru: "книга" },
+            { w: "书店", p: "shū diàn", pos: "名", en: "bookshop", ru: "книжный магазин" },
+            { w: "水", p: "shuǐ", pos: "名", en: "water", ru: "вода" },
+            { w: "睡", p: "shuì", pos: "动", en: "sleep", ru: "спать" },
+            { w: "水果", p: "shuǐ guǒ", pos: "名", en: "fruit", ru: "фрукты" },
+            { w: "睡觉", p: "shuì jiào", pos: "动", en: "to go to bed; to sleep", ru: "ложиться спать; спать" },
+            { w: "说", p: "shuō", pos: "动", en: "speak", ru: "говорить; сказать" },
+            { w: "说话", p: "shuō huà", pos: "动", en: "speak", ru: "разговаривать" },
+            { w: "四", p: "sì", pos: "数", en: "four", ru: "четыре" },
+            { w: "岁", p: "suì", pos: "量", en: "year (of crop harvests)", ru: "лет; годы (о возрасте)" },
+            { w: "他", p: "tā", pos: "代", en: "he; him", ru: "он" },
+            { w: "它", p: "tā", pos: "代", en: "it", ru: "оно (о неодушевленных предметах)" },
+            { w: "她", p: "tā", pos: "代", en: "she; her", ru: "она" },
+            { w: "他们", p: "tā men", pos: "代", en: "they", ru: "они (мужчины/смешанная группа)" },
+            { w: "它们", p: "tā men", pos: "代", en: "they", ru: "они (неодушевленные предметы)" },
+            { w: "她们", p: "tā men", pos: "代", en: "they", ru: "они (женщины)" },
+            { w: "太", p: "tài", pos: "副", en: "very", ru: "слишком; очень" }
+        ],
+8: [
+            { w: "天", p: "tiān", pos: "名、量", en: "day", ru: "день" },
+            { w: "天气", p: "tiān qì", pos: "名", en: "weather", ru: "погода" },
+            { w: "听", p: "tīng", pos: "动", en: "to listen; hear", ru: "слушать; слышать" },
+            { w: "听见", p: "tīng jiàn", pos: "动", en: "hear", ru: "услышать" },
+            { w: "同学", p: "tóng xué", pos: "名", en: "schoolmate; classmate", ru: "одноклассник; сокурсник" },
+            { w: "外", p: "wài", pos: "名", en: "outside", ru: "внешний; снаружи" },
+            { w: "外边", p: "wài biān", pos: "名", en: "outside", ru: "снаружи; вне" },
+            { w: "玩", p: "wán", pos: "动", en: "to play", ru: "играть; развлекаться" },
+            { w: "晚", p: "wǎn", pos: "形", en: "evening", ru: "поздний; поздно" },
+            { w: "晚饭", p: "wǎn fàn", pos: "名", en: "dinner", ru: "ужин" },
+            { w: "晚上", p: "wǎn shang", pos: "名", en: "evening", ru: "вечер" },
+            { w: "喂", p: "wèi", pos: "叹", en: "hello", ru: "алло; эй" },
+            { w: "问", p: "wèn", pos: "动", en: "to ask", ru: "спрашивать" },
+            { w: "问题", p: "wèn tí", pos: "名", en: "problem", ru: "вопрос; проблема" },
+            { w: "我", p: "wǒ", pos: "代", en: "I; me", ru: "я" },
+            { w: "我们", p: "wǒ men", pos: "代", en: "we; us", ru: "мы" },
+            { w: "五", p: "wǔ", pos: "数", en: "five", ru: "пять" },
+            { w: "午饭", p: "wǔ fàn", pos: "名", en: "lunch", ru: "обед" },
+            { w: "喜欢", p: "xǐ huan", pos: "动", en: "to like", ru: "нравиться; любить" },
+            { w: "下", p: "xià", pos: "名、动、量", en: "down; below", ru: "низ; под; спускаться" },
+            { w: "下班", p: "xià bān", pos: "动", en: "go off", ru: "заканчивать работу" },
+            { w: "下课", p: "xià kè", pos: "动", en: "get out of class", ru: "заканчивать урок" },
+            { w: "下午", p: "xià wǔ", pos: "名", en: "afternoon", ru: "вторая половина дня" },
+            { w: "下雨", p: "xià yǔ", pos: "", en: "rain", ru: "идет дождь" },
+            { w: "先生", p: "xiān sheng", pos: "名", en: "Mr; Sir", ru: "господин; мистер" },
+            { w: "现在", p: "xiàn zài", pos: "名", en: "now", ru: "сейчас; теперь" },
+            { w: "想", p: "xiǎng", pos: "动", en: "to want; to think", ru: "хотеть; думать" },
+            { w: "小", p: "xiǎo", pos: "形、前缀", en: "small", ru: "маленький" },
+            { w: "小朋友", p: "xiǎo péng you", pos: "名", en: "child", ru: "ребенок; малыш" },
+            { w: "小时", p: "xiǎo shí", pos: "名", en: "hour", ru: "час (продолжительность)" }
+        ],
+9: [
+            { w: "小学", p: "xiǎo xué", pos: "名", en: "primary school", ru: "начальная школа" },
+            { w: "小学生", p: "xiǎo xué shēng", pos: "名", en: "primary school student", ru: "ученик начальной школы" },
+            { w: "些", p: "xiē", pos: "量", en: "some", ru: "несколько" },
+            { w: "写", p: "xiě", pos: "动", en: "to write", ru: "писать" },
+            { w: "谢谢", p: "xiè xie", pos: "动", en: "thank you", ru: "спасибо" },
+            { w: "新", p: "xīn", pos: "形", en: "new", ru: "новый" },
+            { w: "星期", p: "xīng qī", pos: "名", en: "week", ru: "неделя" },
+            { w: "星期日", p: "xīng qī rì", pos: "名", en: "sunday", ru: "воскресенье" },
+            { w: "星期天", p: "xīng qī tiān", pos: "名", en: "sunday", ru: "воскресенье" },
+            { w: "休息", p: "xiū xi", pos: "动", en: "to rest", ru: "отдыхать" },
+            { w: "学", p: "xué", pos: "动", en: "study", ru: "учить; изучать" },
+            { w: "雪", p: "xuě", pos: "名", en: "snow", ru: "снег" },
+            { w: "学生", p: "xué sheng", pos: "名", en: "student", ru: "студент; ученик" },
+            { w: "学习", p: "xué xí", pos: "动", en: "to learn; to study", ru: "учиться; изучать" },
+            { w: "学校", p: "xué xiào", pos: "名", en: "school", ru: "школа" },
+            { w: "要", p: "yào", pos: "动", en: "want; be going to; ask for; demand", ru: "хотеть; нужно; собираться" },
+            { w: "也", p: "yě", pos: "副", en: "too; also", ru: "тоже; также" },
+            { w: "一", p: "yī", pos: "数", en: "one; once; first; structural word between two of the same verb; as soon as; throughout", ru: "один" },
+            { w: "一半", p: "yī bàn", pos: "数", en: "half", ru: "половина" },
+            { w: "衣服", p: "yī fu", pos: "名", en: "clothes", ru: "одежда" },
+            { w: "医生", p: "yī shēng", pos: "名", en: "doctor", ru: "врач; доктор" },
+            { w: "一下", p: "yī xià", pos: "数量", en: "[used after a verb] give something a go", ru: "немного; разок (после глагола)" },
+            { w: "一些", p: "yī xiē", pos: "数量", en: "some", ru: "несколько; некоторые" },
+            { w: "医院", p: "yī yuàn", pos: "名", en: "hospital", ru: "больница" },
+            { w: "椅子", p: "yǐ zi", pos: "名", en: "chair", ru: "стул" },
+            { w: "有", p: "yǒu", pos: "动", en: "to have", ru: "иметь; быть в наличии" },
+            { w: "有的", p: "yǒu de", pos: "代", en: "some", ru: "некоторые" },
+            { w: "有点儿", p: "yǒu diǎn er", pos: "副", en: "a little", ru: "немножко (о степени)" },
+            { w: "有些", p: "yǒu xiē", pos: "代", en: "some", ru: "некоторые" }
+        ],
+10: [
+            { w: "雨", p: "yǔ", pos: "名", en: "rain", ru: "дождь" }, //
+            { w: "元", p: "yuán", pos: "量", en: "yuan [unit of Chinese currency]; dollar", ru: "юань; доллар" }, //
+            { w: "月", p: "yuè", pos: "名", en: "month; moon", ru: "месяц; луна" }, //
+            { w: "再", p: "zài", pos: "副", en: "again", ru: "снова; опять" }, //
+            { w: "在", p: "zài", pos: "动、介、副", en: "in; at; on", ru: "в; на; находиться" }, //
+            { w: "再见", p: "zài jiàn", pos: "动", en: "goodbye", ru: "до свидания" }, //
+            { w: "早", p: "zǎo", pos: "形", en: "early", ru: "ранний; рано" }, //
+            { w: "早饭", p: "zǎo fàn", pos: "名", en: "breakfast", ru: "завтрак" }, //
+            { w: "早上", p: "zǎo shang", pos: "名", en: "early morning", ru: "утро (раннее)" }, //
+            { w: "怎么", p: "zěn me", pos: "代", en: "how?", ru: "как?; каким образом?" }, //
+            { w: "怎么样", p: "zěn me yàng", pos: "代", en: "how about it", ru: "как?; каков?" }, //
+            { w: "找", p: "zhǎo", pos: "动", en: "to find; to look for", ru: "искать" }, //
+            { w: "这", p: "zhè", pos: "代", en: "this", ru: "это; этот" }, //
+            { w: "这边", p: "zhè biān", pos: "代", en: "this way", ru: "эта сторона; здесь" }, //
+            { w: "这儿", p: "zhè er", pos: "代", en: "here", ru: "здесь; тут" }, //
+            { w: "这个", p: "zhè gè", pos: "代", en: "this", ru: "этот" }, //
+            { w: "这里", p: "zhè lǐ", pos: "代", en: "here", ru: "здесь" }, //
+            { w: "这些", p: "zhè xiē", pos: "代", en: "these", ru: "эти" }, //
+            { w: "真", p: "zhēn", pos: "副", en: "real; so (+adjective)", ru: "настоящий; действительно" }, //
+            { w: "正在", p: "zhèng zài", pos: "副", en: "to be in the process of", ru: "в процессе; как раз" }, //
+            { w: "只", p: "zhī", pos: "量", en: "individual [measure word for small animals]", ru: "сч. сл. для животных" }, //
+            { w: "知道", p: "zhī dào", pos: "动", en: "know; realise; be aware of", ru: "знать; понимать" }, //
+            { w: "中国", p: "zhōng guó", pos: "名", en: "China", ru: "Китай" }, //
+            { w: "中文", p: "zhōng wén", pos: "名", en: "Chinese [written language]", ru: "китайский язык" }, //
+            { w: "中午", p: "zhōng wǔ", pos: "名", en: "midday", ru: "полдень" }, //
+            { w: "中学", p: "zhōng xué", pos: "名", en: "middle school", ru: "средняя школа" }, //
+            { w: "中学生", p: "zhōng xué shēng", pos: "名", en: "middle school student", ru: "ученик средней школы" }, //
+            { w: "住", p: "zhù", pos: "动", en: "to live; stay (a number of nights)", ru: "жить; проживать" }, //
+            { w: "桌子", p: "zhuō zi", pos: "名", en: "table", ru: "стол" }, //
+            { w: "字", p: "zì", pos: "名", en: "(Chinese) character", ru: "иероглиф" }, //
+            { w: "坐", p: "zuò", pos: "动", en: "to sit", ru: "сидеть; садиться" }, //
+            { w: "做", p: "zuò", pos: "动", en: "to do; to be; become (an occupation)", ru: "делать; быть (кем-либо)" }, //
+            { w: "做饭", p: "zuò fàn", pos: "", en: "cooking", ru: "готовить еду" }, //
+            { w: "昨天", p: "zuó tiān", pos: "名", en: "yesterday", ru: "вчера" } //
+        ],
+    },
+   hsk2: {
+        1: [
+            { w: "啊", p: "a", en: "ah! (modal particle) | а (модальная частица)" },
+            { w: "爱好", p: "àihào", en: "hobby; to like | хобби; увлекаться" },
+            { w: "白色", p: "báisè", en: "white color | белый цвет" },
+            { w: "班", p: "bān", en: "class; shift | класс; группа; смена" },
+            { w: "帮", p: "bāng", en: "to help | помогать" },
+            { w: "帮忙", p: "bāngmáng", en: "to help out | помогать; оказывать помощь" },
+            { w: "包", p: "bāo", en: "bag; to wrap | сумка; пакет; сверток" },
+            { w: "本子", p: "běnzi", en: "notebook | тетрадь; блокнот" },
+            { w: "比", p: "bǐ", en: "than; to compare | сравнивать; чем" },
+            { w: "笔", p: "bǐ", en: "pen; brush | ручка; карандаш; кисть" },
+            { w: "别", p: "bié", en: "don't; other | не (в повел. накл.); другой" },
+            { w: "不错", p: "búcuò", en: "not bad; correct | неплохо; правильно" },
+            { w: "不好意思", p: "bù hǎoyìsi", en: "sorry; feel embarrassed | извините; неловко" },
+            { w: "长", p: "cháng", en: "long | длинный" },
+            { w: "车站", p: "chēzhàn", en: "station; stop | остановка; вокзал; станция" },
+            { w: "出", p: "chū", en: "to go out | выходить" },
+            { w: "出国", p: "chūguó", en: "to go abroad | выехать за границу" },
+            { w: "出来", p: "chūlái", en: "come out | выходить (сюда)" },
+            { w: "出门", p: "chūmén", en: "go out; leave home | выходить из дома" },
+            { w: "出去", p: "chūqù", en: "go out | выходить (отсюда)" },
+            { w: "床", p: "chuáng", en: "bed | кровать" },
+            { w: "词", p: "cí", en: "word | слово" },
+            { w: "次", p: "cì", en: "time (measure word) | раз" },
+            { w: "从", p: "cóng", en: "from | из; от; с" },
+            { w: "从小", p: "cóngxiǎo", en: "from childhood | с детства" },
+            { w: "错", p: "cuò", en: "wrong; mistake | ошибка; неправильный" }
+        ],
+        2: [
+            { w: "打", p: "dǎ", en: "to hit; to call; to play (ball) | бить; звонить; играть" },
+            { w: "打车", p: "dǎchē", en: "to take a taxi | брать такси" },
+            { w: "打开", p: "dǎkāi", en: "to open; to turn on | открывать; включать" },
+            { w: "但", p: "dàn", en: "but; however | но; однако" },
+            { w: "但是", p: "dànshì", en: "but; however | но; однако" },
+            { w: "得", p: "de", en: "(structural particle) | (структурная частица)" },
+            { w: "地", p: "de", en: "(adverbial particle) | (частица наречия)" },
+            { w: "等", p: "děng", en: "to wait; and so on | ждать; и так далее" },
+            { w: "地铁", p: "dìtiě", en: "subway; metro | метро" },
+            { w: "点", p: "diǎn", en: "o'clock; point; to light | час; точка; зажигать" },
+            { w: "懂", p: "dǒng", en: "to understand | понимать" },
+            { w: "动", p: "dòng", en: "to move | двигаться; шевелиться" },
+            { w: "饭馆", p: "fànguǎn", en: "restaurant | ресторан" },
+            { w: "飞", p: "fēi", en: "to fly | летать" },
+            { w: "高", p: "gāo", en: "high; tall | высокий" },
+            { w: "告诉", p: "gàosu", en: "to tell; to inform | сообщать; рассказывать" },
+            { w: "高中", p: "gāozhōng", en: "senior high school | старшая школа" },
+            { w: "个子", p: "gèzi", en: "stature; height | рост; фигура" },
+            { w: "跟", p: "gēn", en: "with; to follow | с; вместе с; идти за" },
+            { w: "公交车", p: "gōngjiāochē", en: "bus | автобус" },
+            { w: "过", p: "guò", en: "to pass; to celebrate | проходить; праздновать" },
+            { w: "过来", p: "guòlái", en: "to come over | подходить сюда; заходить" },
+            { w: "过年", p: "guònián", en: "to celebrate New Year | праздновать Новый год" }
+        ],
+        3: [
+            { w: "过去", p: "guòqù", en: "past; pass by | прошлое; проходить" },
+            { w: "还是", p: "háishì", en: "or; still | или; всё ещё" },
+            { w: "黑色", p: "hēisè", en: "black color | черный цвет" },
+            { w: "红茶", p: "hóngchá", en: "black tea | черный чай" },
+            { w: "红色", p: "hóngsè", en: "red color | красный цвет" },
+            { w: "后面", p: "hòumiàn", en: "behind; back | сзади; позади" },
+            { w: "花", p: "huā", en: "flower (n.) | цветок" },
+            { w: "花", p: "huā", en: "to spend (v.) | тратить (деньги/время)" },
+            { w: "画", p: "huà", en: "to draw; painting | рисовать; картина" },
+            { w: "坏", p: "huài", en: "bad; broken | плохой; сломанный" },
+            { w: "回来", p: "huílái", en: "come back | возвращаться (сюда)" },
+            { w: "回去", p: "huíqù", en: "go back | возвращаться (туда)" },
+            { w: "机场", p: "jīchǎng", en: "airport | аэропорт" },
+            { w: "记得", p: "jìde", en: "to remember | помнить" },
+            { w: "机票", p: "jīpiào", en: "air ticket | билет на самолет" },
+            { w: "间", p: "jiān", en: "between; (m.w. for rooms) | комната; между" },
+            { w: "教", p: "jiāo", en: "to teach | преподавать" },
+            { w: "教室", p: "jiàoshì", en: "classroom | аудитория" },
+            { w: "介绍", p: "jièshào", en: "to introduce | представлять; знакомить" },
+            { w: "进", p: "jìn", en: "to enter | входить" },
+            { w: "进来", p: "jìnlái", en: "come in | входить (сюда)" },
+            { w: "进去", p: "jìnqù", en: "go in | входить (туда)" },
+            { w: "经常", p: "jīngcháng", en: "often | часто" },
+            { w: "就", p: "jiù", en: "exactly; then | именно; сразу" },
+            { w: "酒店", p: "jiǔdiàn", en: "hotel | отель" },
+            { w: "咖啡", p: "kāfēi", en: "coffee | кофе" },
+            { w: "开始", p: "kāishǐ", en: "to start | начинать" },
+            { w: "开学", p: "kāixué", en: "school starts | начало занятий" },
+            { w: "考", p: "kǎo", en: "to take a test | сдавать экзамен" },
+            { w: "考试", p: "kǎoshì", en: "exam | экзамен" }
+        ],
+        4: [
+            { w: "考试", p: "kǎoshì", en: "exam; test | экзамен; тест" },
+            { w: "可能", p: "kěnéng", en: "maybe; possible | возможно; может быть" },
+            { w: "裤子", p: "kùzi", en: "trousers; pants | брюки; штаны" },
+            { w: "快", p: "kuài", en: "fast; quick | быстрый; быстро" },
+            { w: "快乐", p: "kuàilè", en: "happy | радостный; счастливый" },
+            { w: "快要", p: "kuàiyào", en: "soon; be about to | скоро; вот-вот" },
+            { w: "篮球", p: "lánqiú", en: "basketball | баскетбол" },
+            { w: "累", p: "lèi", en: "tired | усталый; утомленный" },
+            { w: "离", p: "lí", en: "away from; distant from | от (расстояние)" },
+            { w: "里面", p: "lǐmiàn", en: "inside | внутри" },
+            { w: "楼", p: "lóu", en: "building; floor | здание; этаж" },
+            { w: "路", p: "lù", en: "road; path | дорога; путь" },
+            { w: "绿茶", p: "lǜchá", en: "green tea | зеленый чай" },
+            { w: "绿色", p: "lǜsè", en: "green color | зеленый цвет" },
+            { w: "路上", p: "lùshang", en: "on the way; on the road | в пути; на дороге" },
+            { w: "旅游", p: "lǚyóu", en: "travel; tourism | путешествовать; туризм" },
+            { w: "慢", p: "màn", en: "slow | медленный" },
+            { w: "每", p: "měi", en: "every; each | каждый" },
+            { w: "没意思", p: "méi yìsi", en: "boring; uninteresting | неинтересный; скучный" },
+            { w: "门", p: "mén", en: "door; gate | дверь; ворота" },
+            { w: "门口", p: "ménkǒu", en: "entrance; doorway | вход; двери" },
+            { w: "门票", p: "ménpiào", en: "entrance ticket | входной билет" },
+            { w: "面", p: "miàn", en: "face; surface; noodles | лицо; поверхность; лапша" },
+            { w: "名", p: "míng", en: "name; [MW for people] | имя; [счетное слово]" },
+            { w: "拿", p: "ná", en: "to take; to hold | брать; держать" },
+            { w: "那么", p: "nàme", en: "so; such; in that way | так; такой; в таком случае" },
+            { w: "那样", p: "nàyàng", en: "that kind; like that | такой; таким образом" },
+            { w: "奶茶", p: "nǎichá", en: "milk tea | чай с молоком" },
+            { w: "奶奶", p: "nǎinai", en: "grandmother (paternal) | бабушка (по папе)" },
+            { w: "男孩儿", p: "nánháir", en: "boy | мальчик" }
+        ],
+        5: [
+            { w: "鸟", p: "niǎo", en: "bird | птица" },
+            { w: "女孩儿", p: "nǚháir", en: "girl | девочка" },
+            { w: "旁边", p: "pángbiān", en: "beside; side | рядом; сбоку" },
+            { w: "跑", p: "pǎo", en: "to run | бегать" },
+            { w: "跑步", p: "pǎobù", en: "to jog; running | бег" },
+            { w: "票", p: "piào", en: "ticket | билет" },
+            { w: "起来", p: "qǐlái", en: "to stand up; get up | вставать; подниматься" },
+            { w: "妻子", p: "qīzi", en: "wife | жена" },
+            { w: "前面", p: "qiánmiàn", en: "front; ahead | впереди; перед" },
+            { w: "晴", p: "qíng", en: "sunny; clear | ясный; солнечный" },
+            { w: "球", p: "qiú", en: "ball | мяч" },
+            { w: "让", p: "ràng", en: "to let; allow; yield | позволять; заставлять" },
+            { w: "肉", p: "ròu", en: "meat | мясо" },
+            { w: "商场", p: "shāngchǎng", en: "shopping mall | торговый центр" },
+            { w: "上来", p: "shànglái", en: "come up | подниматься (сюда)" },
+            { w: "上面", p: "shàngmiàn", en: "top; above | на; наверху" },
+            { w: "上去", p: "shàngqù", en: "go up | подниматься (туда)" },
+            { w: "上网", p: "shàngwǎng", en: "to surf the internet | сидеть в интернете" },
+            { w: "身体", p: "shēntǐ", en: "body; health | тело; здоровье" },
+            { w: "生日", p: "shēngrì", en: "birthday | день рождения" },
+            { w: "时", p: "shí", en: "time; hour; when | время; когда" },
+            { w: "事情", p: "shìqing", en: "thing; matter; affair | дело; событие" },
+            { w: "手", p: "shǒu", en: "hand | рука" },
+            { w: "手表", p: "shǒubiǎo", en: "watch | наручные часы" },
+            { w: "书包", p: "shūbāo", en: "schoolbag | школьная сумка" },
+            { w: "舒服", p: "shūfu", en: "comfortable | удобный; уютный" },
+            { w: "送", p: "sòng", en: "to deliver; give as gift | дарить; доставлять" },
+            { w: "虽然", p: "suīrán", en: "although | хотя; несмотря на" },
+            { w: "所以", p: "suǒyǐ", en: "so; therefore | поэтому" }
+        ],
+        6: [
+            { w: "疼", p: "téng", en: "ache; pain; sore | больно; болит" },
+            { w: "踢", p: "tī", en: "to kick; to play (soccer) | пинать; бить (ногой)" },
+            { w: "题", p: "tí", en: "topic; question; problem | тема; вопрос; задание" },
+            { w: "条", p: "tiáo", en: "[MW for long thin things] | [счетное слово для длинных предметов]" },
+            { w: "跳舞", p: "tiàowǔ", en: "to dance | танцевать" },
+            { w: "头", p: "tóu", en: "head | голова" },
+            { w: "外国", p: "wàiguó", en: "foreign country | заграница; иностранное государство" },
+            { w: "外面", p: "wàimiàn", en: "outside | снаружи; вне" },
+            { w: "完", p: "wán", en: "to finish; to end | закончить; завершить" },
+            { w: "万", p: "wàn", en: "ten thousand | десять тысяч" },
+            { w: "往", p: "wǎng", en: "towards; to | в направлении; к" },
+            { w: "忘", p: "wàng", en: "to forget | забывать" },
+            { w: "网上", p: "wǎngshàng", en: "online; on the internet | в сети; в интернете" },
+            { w: "位", p: "wèi", en: "[polite MW for people] | [вежливое счетное слово для людей]" },
+            { w: "为什么", p: "wèishénme", en: "why | почему; зачем" },
+            { w: "洗", p: "xǐ", en: "to wash | мыть; стирать" },
+            { w: "洗手间", p: "xǐshǒujiān", en: "restroom; toilet | туалет; уборная" },
+            { w: "希望", p: "xīwàng", en: "to hope; wish | надеяться; надежда" },
+            { w: "下来", p: "xiàlái", en: "come down | спускаться (сюда)" },
+            { w: "下面", p: "xiàmiàn", en: "below; under; next | под; внизу; ниже" },
+            { w: "下去", p: "xiàqù", en: "go down; continue | спускаться (туда); продолжать" },
+            { w: "笑", p: "xiào", en: "to smile; to laugh | смеяться; улыбаться" },
+            { w: "小孩儿", p: "xiǎoháir", en: "child | ребенок" },
+            { w: "小时候", p: "xiǎoshíhou", en: "in one's childhood | в детстве" },
+            { w: "姓", p: "xìng", en: "surname; family name | фамилия" },
+            { w: "姓名", p: "xìngmíng", en: "full name | имя и фамилия" },
+            { w: "眼睛", p: "yǎnjing", en: "eye | глаз" }
+        ],
+        7: [
+            { w: "颜色", p: "yánsè", en: "color | цвет" },
+            { w: "药", p: "yào", en: "medicine; drug | лекарство" },
+            { w: "药店", p: "yàodiàn", en: "pharmacy; drug store | аптека" },
+            { w: "爷爷", p: "yéye", en: "grandfather (paternal) | дедушка (по папе)" },
+            { w: "一会儿", p: "yíhuìr", en: "a while; a moment | немного; минутка" },
+            { w: "已经", p: "yǐjīng", en: "already | уже" },
+            { w: "一起", p: "yìqǐ", en: "together | вместе" },
+            { w: "意思", p: "yìsi", en: "meaning; idea | значение; смысл" },
+            { w: "阴", p: "yīn", en: "cloudy; overcast | пасмурный" },
+            { w: "因为", p: "yīnwèi", en: "because | потому что; так как" },
+            { w: "右", p: "yòu", en: "right (side) | правый" },
+            { w: "右边", p: "yòubian", en: "right side | справа; правая сторона" },
+            { w: "有时", p: "yǒushí", en: "sometimes | иногда" },
+            { w: "有意思", p: "yǒuyìsi", en: "interesting; fun | интересный" },
+            { w: "游泳", p: "yóuyǒng", en: "to swim | плавать; плавание" },
+            { w: "鱼", p: "yú", en: "fish | рыба" },
+            { w: "远", p: "yuǎn", en: "far; distant | далекий; далеко" },
+            { w: "运动", p: "yùndòng", en: "sports; exercise | спорт; упражняться" },
+            { w: "站", p: "zhàn", en: "station; to stand | станция; стоять" },
+            { w: "丈夫", p: "zhàngfu", en: "husband | муж" },
+            { w: "着", p: "zhe", en: "(particle indicating action in progress) | (глагольный суффикс)" }
+        ],
+        8: [
+            { w: "这么", p: "zhème", en: "so; such; like this | так; такой; настолько" },
+            { w: "这样", p: "zhèyàng", en: "so; such; like this | так; таким образом" },
+            { w: "正", p: "zhèng", en: "in the process of; straight | как раз; прямо сейчас" },
+            { w: "周", p: "zhōu", en: "week | неделя" },
+            { w: "准备", p: "zhǔnbèi", en: "to prepare; ready | готовить; готовиться" },
+            { w: "自己", p: "zìjǐ", en: "oneself; own | сам; свой; собственный" },
+            { w: "走", p: "zǒu", en: "to walk; to leave | идти; ходить; уходить" },
+            { w: "走路", p: "zǒulù", en: "to walk; on foot | идти пешком" },
+            { w: "足球", p: "zúqiú", en: "soccer; football | футбол" },
+            { w: "最", p: "zuì", en: "most; least | самый; больше всего" },
+            { w: "左", p: "zuǒ", en: "left (side) | левый" },
+            { w: "左边", p: "zuǒbian", en: "left side | слева; левая сторона" }
+        ],
+    },
+    hsk3: {
+    1: [
+        { w: "阿姨", p: "ā yí", pos: "名", en: "auntie", ru: "тётя" },
+        { w: "矮", p: "ǎi", pos: "形", en: "short [height]", ru: "низкий" },
+        { w: "爱人", p: "ài rén", pos: "名", en: "lover", ru: "любимый человек" },
+        { w: "安静", p: "ān jìng", pos: "形", en: "quiet", ru: "тихий" },
+        { w: "安全", p: "ān quán", pos: "形", en: "safe", ru: "безопасный" },
+        { w: "把", p: "bǎ", pos: "量、介", en: "grasp", ru: "держать" },
+        { w: "搬", p: "bān", pos: "动", en: "to move", ru: "передвигать" },
+        { w: "办", p: "bàn", pos: "动", en: "handle", ru: "делать; оформлять" },
+        { w: "办法", p: "bàn fǎ", pos: "名", en: "method", ru: "способ" },
+        { w: "办公室", p: "bàn gōng shì", pos: "名", en: "office", ru: "офис" },
+        { w: "班级", p: "bān jí", pos: "名", en: "class", ru: "класс" },
+        { w: "搬家", p: "bān jiā", pos: "动", en: "relocate", ru: "переезжать" },
+        { w: "半天", p: "bàn tiān", pos: "数量", en: "half a day", ru: "полдня" },
+        { w: "帮助", p: "bāng zhù", pos: "动", en: "to help", ru: "помогать" },
+        { w: "饱", p: "bǎo", pos: "形", en: "full", ru: "сытый" },
+        { w: "报纸", p: "bào zhǐ", pos: "名", en: "newspaper", ru: "газета" },
+        { w: "北", p: "běi", pos: "名", en: "north", ru: "север" },
+        { w: "被", p: "bèi", pos: "介", en: "by", ru: "кем-то (пассив)" },
+        { w: "北方", p: "běi fāng", pos: "名", en: "the north", ru: "север" },
+        { w: "笔记", p: "bǐ jì", pos: "名", en: "note", ru: "запись" },
+        { w: "笔记本", p: "bǐ jì běn", pos: "名", en: "notebook", ru: "ноутбук; тетрадь" },
+        { w: "比较", p: "bǐ jiào", pos: "动、副", en: "compare", ru: "сравнивать" },
+        { w: "比如", p: "bǐ rú", pos: "动", en: "for example", ru: "например" }
+    ],
+    2: [
+        { w: "比赛", p: "bǐ sài", pos: "动、名", en: "match", ru: "соревнование" },
+        { w: "必须", p: "bì xū", pos: "副", en: "must", ru: "обязательно" },
+        { w: "变", p: "biàn", pos: "动", en: "turn", ru: "меняться" },
+        { w: "遍", p: "biàn", pos: "量", en: "time", ru: "раз" },
+        { w: "变成", p: "biàn chéng", pos: "动", en: "become", ru: "становиться" },
+        { w: "变化", p: "biàn huà", pos: "动、名", en: "change", ru: "изменение" },
+        { w: "表演", p: "biǎo yǎn", pos: "动", en: "performance", ru: "выступать" },
+        { w: "别的", p: "bié de", pos: "代", en: "other", ru: "другой" },
+        { w: "别人", p: "bié ren", pos: "代", en: "other people", ru: "другие" },
+        { w: "宾馆", p: "bīn guǎn", pos: "名", en: "hotel", ru: "гостиница" },
+        { w: "冰", p: "bīng", pos: "名", en: "ice", ru: "лёд" },
+        { w: "冰激凌", p: "bīng jī líng", pos: "名", en: "ice cream", ru: "мороженое" },
+        { w: "病人", p: "bìng rén", pos: "名", en: "patient", ru: "больной" },
+        { w: "冰箱", p: "bīng xiāng", pos: "名", en: "fridge", ru: "холодильник" },
+        { w: "不但", p: "bù dàn", pos: "连", en: "not only", ru: "не только" },
+        { w: "不见", p: "bú jiàn", pos: "动", en: "disappear", ru: "исчезнуть" },
+        { w: "不久", p: "bù jiǔ", pos: "形", en: "soon", ru: "вскоре" },
+        { w: "不同", p: "bù tóng", pos: "形", en: "different", ru: "разный" },
+        { w: "不行", p: "bù xíng", pos: "动", en: "not okay", ru: "нельзя" },
+        { w: "不用", p: "bù yòng", pos: "副", en: "no need", ru: "не нужно" },
+        { w: "才", p: "cái", pos: "副", en: "just", ru: "только что" },
+        { w: "菜单", p: "cài dān", pos: "名", en: "menu", ru: "меню" },
+        { w: "参加", p: "cān jiā", pos: "动", en: "take part", ru: "участвовать" },
+        { w: "草", p: "cǎo", pos: "名", en: "grass", ru: "трава" },
+        { w: "草地", p: "cǎo dì", pos: "名", en: "lawn", ru: "газон" },
+        { w: "层", p: "céng", pos: "量", en: "storey", ru: "этаж" },
+        { w: "查", p: "chá", pos: "动", en: "check", ru: "проверять" },
+        { w: "差", p: "chà", pos: "形", en: "poor", ru: "плохой" }
+    ],
+    3: [
+        { w: "差不多", p: "chà bu duō", pos: "副", en: "almost", ru: "почти" },
+        { w: "尝", p: "cháng", pos: "动", en: "taste", ru: "пробовать" },
+        { w: "常", p: "cháng", pos: "副", en: "often", ru: "часто" },
+        { w: "长", p: "cháng", pos: "形", en: "long", ru: "длинный" },
+        { w: "常常", p: "cháng cháng", pos: "副", en: "frequently", ru: "часто" },
+        { w: "常见", p: "cháng jiàn", pos: "形", en: "common", ru: "обычный" },
+        { w: "常用", p: "cháng yòng", pos: "形", en: "commonly used", ru: "употребительный" },
+        { w: "衬衫", p: "chèn shān", pos: "名", en: "shirt", ru: "рубашка" },
+        { w: "成绩", p: "chéng jì", pos: "名", en: "results", ru: "успехи" },
+        { w: "城市", p: "chéng shì", pos: "名", en: "city", ru: "город" },
+        { w: "迟到", p: "chí dào", pos: "动", en: "late", ru: "опаздывать" },
+        { w: "出发", p: "chū fā", pos: "动", en: "depart", ru: "отправляться" },
+        { w: "除了", p: "chú le", pos: "介", en: "except", ru: "кроме" },
+        { w: "出生", p: "chū shēng", pos: "动", en: "born", ru: "родиться" },
+        { w: "出院", p: "chū yuàn", pos: "动", en: "discharge", ru: "выписываться" },
+        { w: "初中", p: "chū zhōng", pos: "名", en: "junior high", ru: "средняя школа" },
+        { w: "船", p: "chuán", pos: "名", en: "boat", ru: "лодка" },
+        { w: "春天", p: "chūn tiān", pos: "名", en: "spring", ru: "весна" },
+        { w: "词典", p: "cí diǎn", pos: "名", en: "dictionary", ru: "словарь" },
+        { w: "聪明", p: "cōng ming", pos: "形", en: "clever", ru: "умный" },
+        { w: "大概", p: "dà gài", pos: "副", en: "probably", ru: "вероятно" },
+        { w: "大人", p: "dà rén", pos: "名", en: "adult", ru: "взрослый" },
+        { w: "打扫", p: "dǎ sǎo", pos: "动", en: "clean", ru: "убирать" },
+        { w: "打算", p: "dǎ suàn", pos: "动", en: "plan", ru: "планировать" },
+        { w: "大小", p: "dà xiǎo", pos: "名", en: "size", ru: "размер" },
+        { w: "大熊猫", p: "dà xióng māo", pos: "名", en: "panda", ru: "панда" },
+        { w: "大衣", p: "dà yī", pos: "名", en: "coat", ru: "пальто" }
+    ],
+    4: [
+        { w: "带", p: "dài", pos: "动", en: "carry", ru: "носить; брать с собой" },
+        { w: "蛋糕", p: "dàn gāo", pos: "名", en: "cake", ru: "торт; пирожное" },
+        { w: "担心", p: "dān xīn", pos: "动", en: "worry", ru: "беспокоиться" },
+        { w: "当然", p: "dāng rán", pos: "副", en: "of course", ru: "конечно" },
+        { w: "到处", p: "dào chù", pos: "副", en: "everywhere", ru: "везде; повсюду" },
+        { w: "得", p: "de", pos: "助", en: "[particle]", ru: "частица (v+de+adv)" },
+        { w: "地", p: "de", pos: "助", en: "[particle]", ru: "частица (adv+de+v)" },
+        { w: "得到", p: "dé dào", pos: "动", en: "obtain", ru: "получать" },
+        { w: "得分", p: "dé fēn", pos: "动、名", en: "score", ru: "получать баллы" },
+        { w: "的话", p: "de huà", pos: "助", en: "if; in case", ru: "если" },
+        { w: "灯", p: "dēng", pos: "名", en: "lamp", ru: "лампа; фонарь" },
+        { w: "地点", p: "dì diǎn", pos: "名", en: "location", ru: "место; пункт" },
+        { w: "地方", p: "dì fang", pos: "名", en: "place", ru: "место" },
+        { w: "地图", p: "dì tú", pos: "名", en: "map", ru: "карта" },
+        { w: "电", p: "diàn", pos: "名", en: "electricity", ru: "электричество" },
+        { w: "电梯", p: "diàn tī", pos: "名", en: "lift; elevator", ru: "лифт" },
+        { w: "电子书", p: "diàn zǐ shū", pos: "名", en: "e-book", ru: "электронная книга" },
+        { w: "丢", p: "diū", pos: "动", en: "lose", ru: "терять" },
+        { w: "东", p: "dōng", pos: "名", en: "east", ru: "восток" },
+        { w: "东北", p: "dōng běi", pos: "名", en: "Northeast", ru: "северо-восток" },
+        { w: "懂得", p: "dǒng dé", pos: "动", en: "understand", ru: "понимать" },
+        { w: "东方", p: "dōng fāng", pos: "名", en: "the East", ru: "Восток (сторона)" },
+        { w: "东南", p: "dōng nán", pos: "名", en: "southeast", ru: "юго-восток" },
+        { w: "冬天", p: "dōng tiān", pos: "名", en: "winter", ru: "зима" },
+        { w: "动物", p: "dòng wù", pos: "名", en: "animals", ru: "животные" },
+        { w: "动物园", p: "dòng wù yuán", pos: "名", en: "zoo", ru: "зоопарк" }
+    ],
+    5: [
+        { w: "短", p: "duǎn", pos: "形", en: "short", ru: "короткий" },
+        { w: "段", p: "duàn", pos: "量", en: "section; paragraph", ru: "отрезок; период" },
+        { w: "短裤", p: "duǎn kù", pos: "名", en: "shorts", ru: "шорты" },
+        { w: "锻炼", p: "duàn liàn", pos: "动", en: "physical exercise", ru: "тренироваться" },
+        { w: "对话", p: "duì huà", pos: "动", en: "dialogue", ru: "диалог" },
+        { w: "饿", p: "è", pos: "形", en: "hungry", ru: "голодный" },
+        { w: "耳朵", p: "ěr duo", pos: "名", en: "ears", ru: "уши" },
+        { w: "耳机", p: "ěr jī", pos: "名", en: "headphones", ru: "наушники" },
+        { w: "而且", p: "ér qiě", pos: "连", en: "moreover", ru: "к тому же; притом" },
+        { w: "发", p: "fā", pos: "动", en: "to send (email)", ru: "отправлять" },
+        { w: "发烧", p: "fā shāo", pos: "动", en: "have a fever", ru: "температурить" },
+        { w: "发生", p: "fā shēng", pos: "动", en: "happen", ru: "случаться; происходить" },
+        { w: "发现", p: "fā xiàn", pos: "动", en: "discover", ru: "обнаружить" },
+        { w: "发展", p: "fā zhǎn", pos: "动", en: "develop", ru: "развиваться" },
+        { w: "放", p: "fàng", pos: "动", en: "to put; set free", ru: "класть; отпускать" },
+        { w: "方便", p: "fāng biàn", pos: "形", en: "convenient", ru: "удобный" },
+        { w: "方便面", p: "fāng biàn miàn", pos: "名", en: "instant noodles", ru: "лапша быстрого приготовления" },
+        { w: "方法", p: "fāng fǎ", pos: "名", en: "method", ru: "метод; способ" },
+        { w: "放假", p: "fàng jià", pos: "动", en: "have a holiday", ru: "идти на каникулы" },
+        { w: "方向", p: "fāng xiàng", pos: "名", en: "direction", ru: "направление" },
+        { w: "放心", p: "fàng xīn", pos: "动", en: "feel relieved", ru: "успокоиться" },
+        { w: "放学", p: "fàng xué", pos: "动", en: "finish school", ru: "заканчивать занятия" },
+        { w: "房子", p: "fáng zi", pos: "名", en: "house", ru: "дом" },
+        { w: "分开", p: "fēn kāi", pos: "动", en: "separate", ru: "разделить" },
+        { w: "风", p: "fēng", pos: "名", en: "wind", ru: "ветер" },
+        { w: "封", p: "fēng", pos: "量", en: "measure word for letters", ru: "сч. слово для писем" },
+        { w: "附近", p: "fù jìn", pos: "名", en: "nearby", ru: "поблизости" }
+    ],
+    6: [
+        { w: "夫妻", p: "fū qī", pos: "名", en: "husband and wife", ru: "муж и жена; супруги" },
+        { w: "服务", p: "fú wù", pos: "动", en: "serve", ru: "служить; обслуживать" },
+        { w: "复习", p: "fù xí", pos: "动", en: "revise", ru: "повторять (пройденое)" },
+        { w: "该", p: "gāi", pos: "动", en: "should", ru: "должен; следует" },
+        { w: "干", p: "gàn", pos: "动", en: "do; work", ru: "делать; заниматься" },
+        { w: "感到", p: "gǎn dào", pos: "动", en: "feel", ru: "чувствовать; ощущать" },
+        { w: "干净", p: "gān jìng", pos: "形", en: "clean", ru: "чистый" },
+        { w: "感冒", p: "gǎn mào", pos: "名、动", en: "catch a cold", ru: "простудиться" },
+        { w: "感兴趣", p: "gǎn xìng qù", pos: "无", en: "be interested in", ru: "интересоваться чем-либо" },
+        { w: "刚", p: "gāng", pos: "副", en: "just", ru: "только что" },
+        { w: "刚才", p: "gāng cái", pos: "名", en: "just now", ru: "только что; только что бывший" },
+        { w: "刚刚", p: "gāng gāng", pos: "副", en: "just", ru: "только-только; как раз" },
+        { w: "高铁", p: "gāo tiě", pos: "名", en: "high-speed rail", ru: "скоростная железная дорога" },
+        { w: "根据", p: "gēn jù", pos: "动、介", en: "according to", ru: "согласно; на основании" },
+        { w: "更", p: "gèng", pos: "副", en: "even more", ru: "ещё; более" },
+        { w: "公斤", p: "gōng jīn", pos: "量", en: "kilogram", ru: "килограмм" },
+        { w: "公园", p: "gōng yuán", pos: "名", en: "park", ru: "парк" },
+        { w: "工作日", p: "gōng zuò rì", pos: "名", en: "working day", ru: "рабочий день" },
+        { w: "故事", p: "gù shi", pos: "名", en: "story", ru: "история; рассказ" },
+        { w: "刮", p: "guā", pos: "动", en: "scrape; blow", ru: "скоблить; дуть (о ветре)" },
+        { w: "关", p: "guān", pos: "动", en: "to close", ru: "закрывать" },
+        { w: "关机", p: "guān jī", pos: "动", en: "shut down", ru: "выключить (аппарат)" },
+        { w: "关系", p: "guān xì", pos: "名", en: "relationship", ru: "связь; отношение" },
+        { w: "关心", p: "guān xīn", pos: "动", en: "care about", ru: "заботиться; проявлять интерес" },
+        { w: "关于", p: "guān yú", pos: "介", en: "about", ru: "относительно; о; по поводу" },
+        { w: "关注", p: "guān zhù", pos: "动", en: "focus on", ru: "уделять внимание" },
+        { w: "国家", p: "guó jiā", pos: "名", en: "country", ru: "страна; государство" },
+        { w: "过节", p: "guò jié", pos: "动", en: "celebrate a festival", ru: "праздновать" }
+    ],
+    7: [
+        { w: "过去", p: "guò qù", pos: "名", en: "past", ru: "прошлое; в прошлом" },
+        { w: "还", p: "hái", pos: "动", en: "even", ru: "ещё; всё ещё" },
+        { w: "海", p: "hǎi", pos: "名", en: "sea", ru: "море" },
+        { w: "害怕", p: "hài pà", pos: "动", en: "afraid", ru: "бояться; опасаться" },
+        { w: "好多", p: "hǎo duō", pos: "数", en: "many / a lot of", ru: "много; немало" },
+        { w: "好久", p: "hǎo jiǔ", pos: "形", en: "long / extended", ru: "долго; долгое время" },
+        { w: "号码", p: "hào mǎ", pos: "名", en: "number", ru: "номер" },
+        { w: "好像", p: "hǎo xiàng", pos: "动、副", en: "to seem", ru: "похоже; кажется" },
+        { w: "河", p: "hé", pos: "名", en: "river", ru: "река" },
+        { w: "合适", p: "hé shì", pos: "形", en: "suitable", ru: "подходящий; соответствующий" },
+        { w: "黑板", p: "hēi bǎn", pos: "名", en: "blackboard", ru: "классная доска" },
+        { w: "红绿灯", p: "hóng lǜ dēng", pos: "名", en: "traffic light", ru: "светофор" },
+        { w: "后来", p: "hòu lái", pos: "名", en: "afterward", ru: "потом; впоследствии" },
+        { w: "后年", p: "hòu nián", pos: "名", en: "the year after next", ru: "через год (в позаследующем году)" },
+        { w: "后天", p: "hòu tiān", pos: "名", en: "the day after tomorrow", ru: "послезавтра" },
+        { w: "护照", p: "hù zhào", pos: "名", en: "passport", ru: "паспорт" },
+        { w: "画家", p: "huà jiā", pos: "名", en: "painter / artist", ru: "художник" },
+        { w: "花园", p: "huā yuán", pos: "名", en: "garden", ru: "сад" },
+        { w: "换", p: "huàn", pos: "动", en: "to change (to another one)", ru: "менять; обменивать" },
+        { w: "环境", p: "huán jìng", pos: "名", en: "environment", ru: "окружающая среда; обстановка" },
+        { w: "欢迎", p: "huān yíng", pos: "动", en: "to welcome", ru: "приветствовать; добро пожаловать" },
+        { w: "黄色", p: "huáng sè", pos: "名", en: "yellow", ru: "жёлтый цвет" },
+        { w: "会", p: "huì", pos: "名", en: "meeting", ru: "собрание; заседание" },
+        { w: "回答", p: "huí dá", pos: "动", en: "reply", ru: "отвечать" },
+        { w: "会议", p: "huì yì", pos: "名", en: "meeting", ru: "совещание; конференция" },
+        { w: "或", p: "huò", pos: "连", en: "or", ru: "или" },
+        { w: "或者", p: "huò zhě", pos: "连", en: "perhaps", ru: "или; либо" },
+        { w: "鸡", p: "jī", pos: "名", en: "chicken", ru: "курица" }
+    ],
+8: [
+    { w: "极", p: "jí", pos: "副", en: "extremely", ru: "чрезвычайно; крайне" },
+    { w: "级", p: "jí", pos: "名、量", en: "level; grade", ru: "уровень; разряд" },
+    { w: "计划", p: "jì huà", pos: "名、动", en: "plan", ru: "план; планировать" },
+    { w: "机会", p: "jī huì", pos: "名", en: "opportunity", ru: "шанс; возможность" },
+    { w: "极了", p: "jí le", pos: "助", en: "extremely", ru: "чрезвычайно; в высшей степени" },
+    { w: "记住", p: "jì zhù", pos: "动", en: "remember", ru: "запомнить" },
+    { w: "季节", p: "jì jié", pos: "名", en: "season", ru: "сезон; время года" },
+    { w: "记得", p: "jì de", pos: "动", en: "remember", ru: "помнить" },
+    { w: "检查", p: "jiǎn chá", pos: "动", en: "to check", ru: "проверять; осматривать" },
+    { w: "简单", p: "jiǎn dān", pos: "形", en: "simple", ru: "простой" },
+    { w: "见", p: "jiàn", pos: "动", en: "to see", ru: "видеть; встречаться" },
+    { w: "健康", p: "jiàn kāng", pos: "名、形", en: "healthy", ru: "здоровье; здоровый" },
+    { w: "见面", p: "jiàn miàn", pos: "动", en: "to meet", ru: "видеться; встречаться" },
+    { w: "讲", p: "jiǎng", pos: "动", en: "to talk; speak", ru: "говорить; рассказывать" },
+    { w: "奖金", p: "jiǎng jīn", pos: "名", en: "bonus", ru: "премия; бонус" },
+    { w: "降低", p: "jiàng dī", pos: "动", en: "to reduce", ru: "снижать; понижать" },
+    { w: "交给", p: "jiāo gěi", pos: "动", en: "to hand over", ru: "передавать; вручать" },
+    { w: "教", p: "jiāo", pos: "动", en: "to teach", ru: "преподавать; учить" },
+    { w: "脚", p: "jiǎo", pos: "名", en: "foot", ru: "нога; ступня" },
+    { w: "角", p: "jiǎo", pos: "量", en: "0.1 yuan", ru: "цзяо (1/10 юаня)" },
+    { w: "教室", p: "jiào shì", pos: "名", en: "classroom", ru: "класс; аудитория" },
+    { w: "教育", p: "jiào yù", pos: "名、动", en: "education", ru: "образование; воспитывать" },
+    { w: "饺子", p: "jiǎo zi", pos: "名", en: "dumpling", ru: "пельмени" },
+    { w: "接", p: "jiē", pos: "动", en: "to pick up; receive", ru: "встречать; принимать" },
+    { w: "街道", p: "jiē dào", pos: "名", en: "street", ru: "улица" },
+    { w: "节目", p: "jié mù", pos: "名", en: "program", ru: "программа; передача" },
+    { w: "节日", p: "jié rì", pos: "名", en: "festival", ru: "праздник" }
+],
+9: [
+    { w: "结束", p: "jié shù", pos: "动", en: "finish", ru: "заканчивать; завершать" },
+    { w: "斤", p: "jīn", pos: "量", en: "jin≈0.5 kilogram", ru: "цзинь (полкилограмма)" },
+    { w: "经过", p: "jīng guò", pos: "动、名", en: "pass through", ru: "проходить через; процесс" },
+    { w: "经理", p: "jīng lǐ", pos: "名", en: "manager", ru: "менеджер; директор" },
+    { w: "久", p: "jiǔ", pos: "形", en: "long time", ru: "долго; долгое время" },
+    { w: "酒", p: "jiǔ", pos: "名", en: "wine", ru: "вино; алкоголь" },
+    { w: "旧", p: "jiù", pos: "形", en: "old; former", ru: "старый; былой" },
+    { w: "句", p: "jù", pos: "量", en: "sentence", ru: "счётное слово для предложений" },
+    { w: "句子", p: "jù zi", pos: "名", en: "sentence", ru: "предложение; фраза" },
+    { w: "决定", p: "jué dìng", pos: "动、名", en: "decide", ru: "решать; решение" },
+    { w: "开花", p: "kāi huā", pos: "动", en: "bloom /flower", ru: "цвести; расцветать" },
+    { w: "开会", p: "kāi huì", pos: "动", en: "hold a meeting /have a meeting", ru: "проводить собрание" },
+    { w: "开机", p: "kāi jī", pos: "动", en: "power on /switch on", ru: "включать (устройство)" },
+    { w: "开心", p: "kāi xīn", pos: "形", en: "pleased; happy", ru: "радостный; счастливый" },
+    { w: "看来", p: "kàn lái", pos: "动", en: "seem /look like", ru: "по-видимому; кажется" },
+    { w: "可", p: "kě", pos: "连", en: "but /yet", ru: "но; однако" },
+    { w: "渴", p: "kě", pos: "形", en: "thirsty", ru: "хотеть пить; жаждущий" },
+    { w: "刻", p: "kè", pos: "量", en: "quarter (of an hour); to carve", ru: "четверть часа; вырезать" },
+    { w: "可爱", p: "kě ài", pos: "形", en: "lovely; loveable", ru: "милый; прелестный" },
+    { w: "课本", p: "kè běn", pos: "名", en: "textbook", ru: "учебник" },
+    { w: "客人", p: "kè rén", pos: "名", en: "guest", ru: "гость" },
+    { w: "可是", p: "kě shì", pos: "连", en: "but", ru: "но; однако" },
+    { w: "课文", p: "kè wén", pos: "名", en: "text /lesson", ru: "текст (урока)" },
+    { w: "空调", p: "kōng tiáo", pos: "名", en: "air-conditioning", ru: "кондиционер" },
+    { w: "哭", p: "kū", pos: "动", en: "cry", ru: "плакать" },
+    { w: "筷子", p: "kuài zi", pos: "名", en: "chopsticks", ru: "палочки для еды" },
+    { w: "矿泉水", p: "kuàng quán shuǐ", pos: "名", en: "mineral water", ru: "минеральная вода" },
+    { w: "来自", p: "lái zì", pos: "动", en: "come from", ru: "происходить из; родом из" },
+    { w: "蓝", p: "lán", pos: "形", en: "blue", ru: "синий; голубой" }
+],
+10: [
+    { w: "老", p: "lǎo", pos: "形、前缀", en: "old; aged", ru: "старый; почтенный" },
+    { w: "老人", p: "lǎo rén", pos: "名", en: "old man/woman", ru: "старик; пожилой человек" },
+    { w: "离开", p: "lí kāi", pos: "动", en: "leave", ru: "покидать; уходить" },
+    { w: "历史", p: "lì shǐ", pos: "名", en: "history", ru: "история" },
+    { w: "礼物", p: "lǐ wù", pos: "名", en: "gift; present", ru: "подарок" },
+    { w: "脸", p: "liǎn", pos: "名", en: "face", ru: "лицо" },
+    { w: "练", p: "liàn", pos: "动", en: "practice / train / exercise", ru: "тренироваться; упражняться" },
+    { w: "练习", p: "liàn xí", pos: "动、名", en: "to practise", ru: "упражняться; упражнение" },
+    { w: "辆", p: "liàng", pos: "量", en: "[measure word for vehicles]", ru: "счётное слово для транспорта" },
+    { w: "凉快", p: "liáng kuai", pos: "形", en: "cool", ru: "прохладный; свежий" },
+    { w: "聊", p: "liáo", pos: "动", en: "chat", ru: "болтать; беседовать" },
+    { w: "了解", p: "liǎo jiě", pos: "动", en: "understand", ru: "понимать; разбираться" },
+    { w: "聊天儿", p: "liáo tiān er", pos: "动", en: "have a chat", ru: "болтать; чатиться" },
+    { w: "邻居", p: "lín jū", pos: "名", en: "neighbour", ru: "сосед" },
+    { w: "留学", p: "liú xué", pos: "动", en: "study abroad", ru: "учиться за границей" },
+    { w: "留学生", p: "liú xué shēng", pos: "名", en: "international student", ru: "иностранный студент" },
+    { w: "楼梯", p: "lóu tī", pos: "名", en: "staircase /stairs", ru: "лестница" },
+    { w: "路边", p: "lù biān", pos: "名", en: "roadside /curb", ru: "обочина; у дороги" },
+    { w: "路口", p: "lù kǒu", pos: "名", en: "crossroads /intersection", ru: "перекресток" },
+    { w: "马", p: "mǎ", pos: "名", en: "horse", ru: "лошадь" },
+    { w: "马路", p: "mǎ lù", pos: "名", en: "road", ru: "дорога; мостовая" },
+    { w: "马上", p: "mǎ shàng", pos: "副", en: "immediately", ru: "сразу; тотчас" },
+    { w: "满意", p: "mǎn yì", pos: "动", en: "pleased; satisfied", ru: "довольный; удовлетворенный" },
+    { w: "毛", p: "máo", pos: "量", en: "hair; fur; crude", ru: "шерсть; волос; мао (1/10 юаня)" },
+    { w: "米", p: "mǐ", pos: "量", en: "rice; metre", ru: "рис; метр" },
+    { w: "面前", p: "miàn qián", pos: "名", en: "presence", ru: "перед лицом; в присутствии" },
+    { w: "明白", p: "míng bai", pos: "形、动", en: "to understand", ru: "понимать; ясный" },
+    { w: "名单", p: "míng dān", pos: "名", en: "list", ru: "список" },
+    { w: "名人", p: "míng rén", pos: "名", en: "celebrity", ru: "знаменитость" },
+    { w: "南", p: "nán", pos: "名", en: "south", ru: "юг" },
+    { w: "难", p: "nán", pos: "形", en: "hard; difficult", ru: "трудный; тяжелый" }
+],
+11: [
+    { w: "南方", p: "nán fāng", pos: "名", en: "south", ru: "юг; южная сторона" },
+    { w: "难过", p: "nán guò", pos: "形", en: "have a hard time", ru: "огорченный; грустный" },
+    { w: "难看", p: "nán kàn", pos: "形", en: "ugly", ru: "некрасивый; уродливый" },
+    { w: "男人", p: "nán rén", pos: "名", en: "man", ru: "мужчина" },
+    { w: "男生", p: "nán shēng", pos: "名", en: "boy", ru: "мальчик; юноша" },
+    { w: "难题", p: "nán tí", pos: "名", en: "puzzle", ru: "сложная задача; проблема" },
+    { w: "难听", p: "nán tīng", pos: "形", en: "harsh", ru: "неприятный на слух" },
+    { w: "年级", p: "nián jí", pos: "名", en: "(school) year/grade", ru: "класс; курс" },
+    { w: "年轻", p: "nián qīng", pos: "形", en: "young", ru: "молодой" },
+    { w: "牛", p: "niú", pos: "名", en: "cow; cool /awesome", ru: "корова; крутой" },
+    { w: "努力", p: "nǔ lì", pos: "动、形", en: "hardworking", ru: "старательный; прилагать усилия" },
+    { w: "女人", p: "nǚ rén", pos: "名", en: "woman", ru: "женщина" },
+    { w: "女生", p: "nǚ shēng", pos: "名", en: "girl", ru: "девочка; девушка" },
+    { w: "爬", p: "pá", pos: "动", en: "climb", ru: "лезть; карабкаться" },
+    { w: "怕", p: "pà", pos: "动", en: "fear", ru: "бояться" },
+    { w: "拍照", p: "pāi zhào", pos: "动", en: "take photos", ru: "фотографировать" },
+    { w: "盘子", p: "pán zi", pos: "名", en: "tray", ru: "тарелка; блюдо" },
+    { w: "胖", p: "pàng", pos: "形", en: "fat", ru: "толстый; полный" },
+    { w: "啤酒", p: "pí jiǔ", pos: "名", en: "beer", ru: "пиво" },
+    { w: "平时", p: "píng shí", pos: "名", en: "ordinarily", ru: "обычно; в обычное время" },
+    { w: "瓶子", p: "píng zi", pos: "名", en: "bottle", ru: "бутылка" },
+    { w: "骑", p: "qí", pos: "动", en: "to ride (a bicycle, horse)", ru: "ездить верхом" },
+    { w: "起", p: "qǐ", pos: "动", en: "up; case/batch", ru: "подниматься; (счетное слово)" },
+    { w: "汽车", p: "qì chē", pos: "名", en: "car", ru: "автомобиль" },
+    { w: "起飞", p: "qǐ fēi", pos: "动", en: "take off [plane]", ru: "взлетать" },
+    { w: "奇怪", p: "qí guài", pos: "形", en: "strange", ru: "странный" },
+    { w: "其实", p: "qí shí", pos: "副", en: "in fact", ru: "на самом деле" },
+    { w: "其他", p: "qí tā", pos: "代", en: "other", ru: "другие; остальные" },
+    { w: "卡", p: "qiǎ", pos: "名", en: "Card / Block / Jam", ru: "карточка; застрять" },
+    { w: "铅笔", p: "qiān bǐ", pos: "名", en: "pencil", ru: "карандаш" },
+    { w: "前年", p: "qián nián", pos: "名", en: "the year before last (year)", ru: "позапрошлый год" }
+],
+12: [
+    { w: "前天", p: "qián tiān", pos: "名", en: "the day before yesterday", ru: "позавчера" },
+    { w: "清楚", p: "qīng chu", pos: "形、动", en: "clear", ru: "ясный; отчетливый; понимать" },
+    { w: "请假", p: "qǐng jià", pos: "动", en: "ask for leave", ru: "просить отпуск; отпрашиваться" },
+    { w: "请客", p: "qǐng kè", pos: "动", en: "treat", ru: "угощать; приглашать в гости" },
+    { w: "球场", p: "qiú chǎng", pos: "名", en: "sports field / court", ru: "спортивная площадка; корт" },
+    { w: "秋天", p: "qiū tiān", pos: "名", en: "autumn / fall", ru: "осень" },
+    { w: "裙子", p: "qún zi", pos: "名", en: "skirt", ru: "юбка" },
+    { w: "然后", p: "rán hòu", pos: "连", en: "and then; after that", ru: "потом; затем" },
+    { w: "热情", p: "rè qíng", pos: "形", en: "enthusiastic", ru: "теплый; радушный; энтузиазм" },
+    { w: "认得", p: "rèn dé", pos: "动", en: "recognize", ru: "узнавать; быть знакомым" },
+    { w: "认为", p: "rèn wéi", pos: "动", en: "to think that; consider", ru: "считать; полагать" },
+    { w: "认真", p: "rèn zhēn", pos: "形", en: "earnest", ru: "серьезный; добросовестный" },
+    { w: "容易", p: "róng yì", pos: "形", en: "easy", ru: "легкий; простой" },
+    { w: "如果", p: "rú guǒ", pos: "连", en: "if", ru: "если" },
+    { w: "伞", p: "sǎn", pos: "名", en: "umbrella", ru: "зонт; зонтик" },
+    { w: "扫", p: "sǎo", pos: "动", en: "clean", ru: "мести; подметать" },
+    { w: "沙发", p: "shā fā", pos: "名", en: "sofa", ru: "диван" },
+    { w: "山", p: "shān", pos: "名", en: "mountain / hill", ru: "гора" },
+    { w: "上衣", p: "shàng yī", pos: "名", en: "upper garment", ru: "верхняя одежда; куртка" },
+    { w: "勺子", p: "sháo zi", pos: "名", en: "spoon; ladle; scoop", ru: "ложка" },
+    { w: "身边", p: "shēn biān", pos: "名", en: "around / beside / at one's side", ru: "под боком; рядом" },
+    { w: "身高", p: "shēn gāo", pos: "名", en: "height", ru: "рост (человека)" },
+    { w: "声", p: "shēng", pos: "名、量", en: "sound / voice", ru: "звук; голос; (счетное слово)" },
+    { w: "生活", p: "shēng huó", pos: "名、动", en: "life", ru: "жизнь; жить" },
+    { w: "生气", p: "shēng qì", pos: "动", en: "to get angry", ru: "сердиться; обижаться" },
+    { w: "声音", p: "shēng yīn", pos: "名", en: "sound", ru: "звук; голос" },
+    { w: "市", p: "shì", pos: "名", en: "city / municipality", ru: "город; муниципалитет" },
+    { w: "试", p: "shì", pos: "动", en: "to try", ru: "пробовать; пытаться" },
+    { w: "室", p: "shì", pos: "名", en: "room", ru: "комната; кабинет" },
+    { w: "世界", p: "shì jiè", pos: "名", en: "world", ru: "мир; вселенная" }
+],
+13: [
+    { w: "收", p: "shōu", pos: "动", en: "to receive", ru: "получать; принимать" },
+    { w: "受", p: "shòu", pos: "动", en: "suffer (from)", ru: "терпеть; подвергаться" },
+    { w: "瘦", p: "shòu", pos: "形", en: "thin", ru: "худой; тонкий" },
+    { w: "收到", p: "shōu dào", pos: "动", en: "receive / get", ru: "получить; прийти (о почте)" },
+    { w: "受到", p: "shòu dào", pos: "动", en: "receive", ru: "получить; пользоваться (напр., вниманием)" },
+    { w: "树", p: "shù", pos: "名", en: "tree", ru: "дерево" },
+    { w: "叔叔", p: "shū shu", pos: "名", en: "uncle [father's younger brother]", ru: "дядя (младший брат отца)" },
+    { w: "数学", p: "shù xué", pos: "名", en: "maths", ru: "математика" },
+    { w: "刷", p: "shuā", pos: "动", en: "scroll", ru: "чистить (щеткой); чистить зубы" },
+    { w: "双", p: "shuāng", pos: "量", en: "a pair of", ru: "пара" },
+    { w: "水平", p: "shuǐ píng", pos: "名", en: "level", ru: "уровень" },
+    { w: "司机", p: "sī jī", pos: "名", en: "driver", ru: "водитель; шофер" },
+    { w: "四季", p: "sì jì", pos: "名", en: "Four seasons", ru: "четыре сезона" },
+    { w: "太阳", p: "tài yáng", pos: "名", en: "sun", ru: "солнце" },
+    { w: "糖", p: "táng", pos: "名", en: "sugar", ru: "сахар; конфета" },
+    { w: "特别", p: "tè bié", pos: "形、副", en: "special; especially", ru: "особый; особенно" },
+    { w: "提高", p: "tí gāo", pos: "动", en: "raise", ru: "поднимать; повышать" },
+    { w: "体育", p: "tǐ yù", pos: "名", en: "physical education", ru: "физкультура; спорт" },
+    { w: "体育馆", p: "tǐ yù guǎn", pos: "名", en: "gymnasium / gym", ru: "спортивный зал; дворец спорта" },
+    { w: "甜", p: "tián", pos: "形", en: "sweet", ru: "сладкий" },
+    { w: "跳", p: "tiào", pos: "动", en: "jump", ru: "прыгать" },
+    { w: "挺", p: "tǐng", pos: "副", en: "quite", ru: "очень; весьма" },
+    { w: "听说", p: "tīng shuō", pos: "动", en: "hear", ru: "говорят, что...; слышать (от других)" },
+    { w: "同事", p: "tóng shì", pos: "名", en: "colleague", ru: "коллега; сослуживец" },
+    { w: "同意", p: "tóng yì", pos: "动", en: "to agree", ru: "соглашаться; одобрять" },
+    { w: "头发", p: "tóu fa", pos: "名", en: "hair", ru: "волосы" },
+    { w: "突然", p: "tū rán", pos: "形", en: "suddenly", ru: "внезапный; вдруг" },
+    { w: "图书馆", p: "tú shū guǎn", pos: "名", en: "library", ru: "библиотека" },
+    { w: "腿", p: "tuǐ", pos: "名", en: "leg", ru: "нога" }
+],
+14: [
+    { w: "外地", p: "wài dì", pos: "名", en: "other places / non-local areas", ru: "другие места; иногородний" },
+    { w: "外卖", p: "wài mài", pos: "动、名", en: "takeout; order takeout", ru: "еда на вынос; доставка еды" },
+    { w: "外语", p: "wài yǔ", pos: "名", en: "foreign language", ru: "иностранный язык" },
+    { w: "碗", p: "wǎn", pos: "名", en: "a bowl of", ru: "миска; чашка" },
+    { w: "完成", p: "wán chéng", pos: "动", en: "complete", ru: "завершить; выполнить" },
+    { w: "晚点", p: "wǎn diǎn", pos: "动", en: "be late / delay", ru: "опаздывать; задерживаться (о рейсе)" },
+    { w: "晚会", p: "wǎn huì", pos: "名", en: "evening party / soiree", ru: "вечеринка; торжественный вечер" },
+    { w: "忘记", p: "wàng jì", pos: "动", en: "forget", ru: "забыть" },
+    { w: "网球", p: "wǎng qiú", pos: "名", en: "tennis", ru: "теннис" },
+    { w: "网站", p: "wǎng zhàn", pos: "名", en: "website", ru: "веб-сайт" },
+    { w: "为", p: "wèi", pos: "介", en: "for (someone; something); to do; to be", ru: "для; ради; быть; делать" },
+    { w: "为了", p: "wèi le", pos: "介", en: "in order to", ru: "для того чтобы; ради" },
+    { w: "卫生间", p: "wèi shēng jiān", pos: "名", en: "toilet", ru: "туалет; ванная комната" },
+    { w: "文化", p: "wén huà", pos: "名", en: "culture", ru: "культура" },
+    { w: "屋子", p: "wū zi", pos: "名", en: "room", ru: "комната; помещение" },
+    { w: "西", p: "xī", pos: "名", en: "west", ru: "запад" },
+    { w: "喜爱", p: "xǐ ài", pos: "动", en: "like", ru: "любить; обожать" },
+    { w: "西北", p: "xī běi", pos: "名", en: "northwest", ru: "северо-запад" },
+    { w: "西方", p: "xī fāng", pos: "名", en: "the west", ru: "запад; западные страны" },
+    { w: "西瓜", p: "xī guā", pos: "名", en: "watermelon", ru: "арбуз" },
+    { w: "习惯", p: "xí guàn", pos: "动、名", en: "be used to", ru: "привычка; привыкать" },
+    { w: "西南", p: "xī nán", pos: "名", en: "the southwest", ru: "юго-запад" },
+    { w: "洗衣机", p: "xǐ yī jī", pos: "名", en: "washing machine", ru: "стиральная машина" },
+    { w: "洗澡", p: "xǐ zǎo", pos: "动", en: "have a shower; bath", ru: "принимать душ/ванну" },
+    { w: "夏天", p: "xià tiān", pos: "名", en: "summer", ru: "лето" },
+    { w: "先", p: "xiān", pos: "副", en: "first", ru: "сначала; прежде" },
+    { w: "向", p: "xiàng", pos: "动、介", en: "towards", ru: "направление к; к; в сторону" },
+    { w: "像", p: "xiàng", pos: "动", en: "likeness; resemble; look as if", ru: "быть похожим; напоминать" }
+],
+15: [
+    { w: "相机", p: "xiàng jī", pos: "名", en: "camera", ru: "фотоаппарат" },
+    { w: "香蕉", p: "xiāng jiāo", pos: "名", en: "banana", ru: "банан" },
+    { w: "相信", p: "xiāng xìn", pos: "动", en: "to believe", ru: "верить; доверять" },
+    { w: "箱子", p: "xiāng zi", pos: "名", en: "case/box", ru: "ящик; чемодан; коробка" },
+    { w: "小区", p: "xiǎo qū", pos: "名", en: "Residential area / Community", ru: "жилой район; микрорайон" },
+    { w: "小心", p: "xiǎo xīn", pos: "动、形", en: "take care", ru: "осторожно; быть осторожным" },
+    { w: "校园", p: "xiào yuán", pos: "名", en: "campus", ru: "кампус; школьный двор" },
+    { w: "校长", p: "xiào zhǎng", pos: "名", en: "head teacher; principal", ru: "директор (школы); ректор" },
+    { w: "鞋", p: "xié", pos: "名", en: "shoes", ru: "обувь; туфли" },
+    { w: "信", p: "xìn", pos: "动、名", en: "believe; trust / faith", ru: "письмо; верить" },
+    { w: "心里", p: "xīn lǐ", pos: "名", en: "heart / mind", ru: "в душе; в сердце" },
+    { w: "新年", p: "xīn nián", pos: "名", en: "New Year", ru: "Новый год" },
+    { w: "新闻", p: "xīn wén", pos: "名", en: "news", ru: "новости" },
+    { w: "新鲜", p: "xīn xiān", pos: "形", en: "fresh", ru: "свежий" },
+    { w: "信用卡", p: "xìn yòng kǎ", pos: "名", en: "credit card", ru: "кредитная карта" },
+    { w: "行", p: "xíng", pos: "动、形", en: "OK", ru: "ладно; пойдет" },
+    { w: "行李", p: "xíng lǐ", pos: "名", en: "luggage / baggage", ru: "багаж" },
+    { w: "兴趣", p: "xìng qù", pos: "名", en: "interest", ru: "интерес" },
+    { w: "休假", p: "xiū jià", pos: "动", en: "take a vacation / have a holiday", ru: "быть в отпуске; уходить на каникулы" },
+    { w: "需要", p: "xū yào", pos: "动、名", en: "need", ru: "нуждаться; необходимость" },
+    { w: "选", p: "xuǎn", pos: "动", en: "choose", ru: "выбирать" },
+    { w: "选择", p: "xuǎn zé", pos: "动", en: "choice", ru: "выбирать; выбор" },
+    { w: "学期", p: "xué qī", pos: "名", en: "school term; semester", ru: "семестр; учебное полугодие" },
+    { w: "牙", p: "yá", pos: "名", en: "tooth", ru: "зуб" },
+    { w: "牙刷", p: "yá shuā", pos: "名", en: "toothbrush", ru: "зубная щетка" },
+    { w: "羊", p: "yáng", pos: "名", en: "sheep", ru: "баран; овца" },
+    { w: "养", p: "yǎng", pos: "动", en: "raise", ru: "выращивать; содержать (животных)" },
+    { w: "要求", p: "yāo qiú", pos: "动、名", en: "requirement", ru: "требование; требовать" }
+],
+16: [
+    { w: "页", p: "yè", pos: "量", en: "page", ru: "страница; лист" },
+    { w: "一般", p: "yī bān", pos: "形", en: "ordinary", ru: "обычный; простой; рядовой" },
+    { w: "一边", p: "yī biān", pos: "副", en: "on the one hand ...", ru: "и... и...; в то же время" },
+    { w: "一定", p: "yī dìng", pos: "形、副", en: "definitely", ru: "обязательно; непременно; определенный" },
+    { w: "一共", p: "yī gòng", pos: "副", en: "altogether", ru: "в общей сложности; всего" },
+    { w: "以后", p: "yǐ hòu", pos: "名", en: "later", ru: "после; позже; в дальнейшем" },
+    { w: "一块儿", p: "yí kuài er", pos: "名、副", en: "together", ru: "вместе" },
+    { w: "以前", p: "yǐ qián", pos: "名", en: "before", ru: "раньше; прежде; до" },
+    { w: "以上", p: "yǐ shàng", pos: "名", en: "above", ru: "свыше; вышеуказанный" },
+    { w: "以外", p: "yǐ wài", pos: "名", en: "except", ru: "за исключением; кроме; вне" },
+    { w: "以为", p: "yǐ wéi", pos: "动", en: "think; feel; reckon", ru: "полагать; считать (ошибочно)" },
+    { w: "以下", p: "yǐ xià", pos: "名", en: "the following/below", ru: "ниже; нижеследующий" },
+    { w: "一样", p: "yí yàng", pos: "形", en: "same; identical", ru: "одинаковый; такой же" },
+    { w: "一直", p: "yī zhí", pos: "副", en: "straight on; always", ru: "всегда; всё время; прямо" },
+    { w: "银行", p: "yín háng", pos: "名", en: "bank", ru: "банк" },
+    { w: "银行卡", p: "yín háng kǎ", pos: "名", en: "bank card", ru: "банковская карта" },
+    { w: "饮料", p: "yǐn liào", pos: "名", en: "drink", ru: "напиток" },
+    { w: "音乐", p: "yīn yuè", pos: "名", en: "music", ru: "музыка" },
+    { w: "应该", p: "yīng gāi", pos: "动", en: "should", ru: "должен; следует" },
+    { w: "影响", p: "yǐng xiǎng", pos: "动、名", en: "influence; to affect", ru: "влиять; влияние" },
+    { w: "用", p: "yòng", pos: "动", en: "to use", ru: "использовать; пользоваться" },
+    { w: "又", p: "yòu", pos: "副", en: "again", ru: "снова; опять" },
+    { w: "有关", p: "yǒu guān", pos: "动、介", en: "relate to; concerning / regarding", ru: "касаться; иметь отношение к" },
+    { w: "邮件", p: "yóu jiàn", pos: "名", en: "email / mail", ru: "почта; почтовое отправление" },
+    { w: "游客", p: "yóu kè", pos: "名", en: "tourist / visitor", ru: "турист; путешественник" },
+    { w: "有名", p: "yǒu míng", pos: "形", en: "famous", ru: "известный; знаменитый" },
+    { w: "游戏", p: "yóu xì", pos: "名", en: "game", ru: "игра" },
+    { w: "邮箱", p: "yóu xiāng", pos: "名", en: "mailbox", ru: "почтовый ящик" },
+    { w: "有用", p: "yǒu yòng", pos: "形", en: "useful", ru: "полезный" },
+    { w: "遇到", p: "yù dào", pos: "动", en: "to meet", ru: "встретить; столкнуться с" }
+],
+17: [
+    { w: "遇见", p: "yù jiàn", pos: "动", en: "meet", ru: "встретить; столкнуться с" },
+    { w: "羽毛球", p: "yǔ máo qiú", pos: "名", en: "badminton", ru: "бадминтон" },
+    { w: "语言", p: "yǔ yán", pos: "名", en: "language", ru: "язык" },
+    { w: "雨衣", p: "yǔ yī", pos: "名", en: "raincoat", ru: "дождевик" },
+    { w: "园", p: "yuán", pos: "名", en: "garden", ru: "сад; парк" },
+    { w: "员", p: "yuán", pos: "后缀", en: "er", ru: "сотрудник; член; (суффикс профессий)" },
+    { w: "愿意", p: "yuàn yì", pos: "动", en: "willing", ru: "желать; хотеть; быть готовым" },
+    { w: "越", p: "yuè", pos: "副", en: "the more...the more....", ru: "чем... тем..." },
+    { w: "月亮", p: "yuè liang", pos: "名", en: "moon", ru: "луна" },
+    { w: "运动会", p: "yùn dòng huì", pos: "名", en: "sports meeting", ru: "спортивные соревнования; спартакиада" },
+    { w: "运动员", p: "yùn dòng yuán", pos: "名", en: "athlete", ru: "спортсмен" },
+    { w: "咱们", p: "zán men", pos: "代", en: "we [you and me etc.]", ru: "мы (включая собеседника)" },
+    { w: "脏", p: "zāng", pos: "形", en: "dirty", ru: "грязный" },
+    { w: "怎么办", p: "zěn me bàn", pos: "", en: "what to do", ru: "как быть; что делать" },
+    { w: "怎样", p: "zěn yàng", pos: "代", en: "how", ru: "как; каким образом" },
+    { w: "站", p: "zhàn", pos: "动", en: "stand", ru: "стоять; остановка; вокзал" },
+    { w: "张", p: "zhāng", pos: "动、量", en: "to open up; [measure word for flat objects]", ru: "открывать; (счётное слово для плоских предметов)" },
+    { w: "照", p: "zhào", pos: "动", en: "take (a photo)", ru: "фотографировать; светить" },
+    { w: "照顾", p: "zhào gu", pos: "动", en: "to look after", ru: "заботиться; присматривать" },
+    { w: "着急", p: "zháo jí", pos: "形", en: "anxious", ru: "волноваться; беспокоиться" },
+    { w: "照片", p: "zhào piàn", pos: "名", en: "photograph", ru: "фотография" },
+    { w: "照相", p: "zhào xiàng", pos: "动", en: "take a photo", ru: "фотографировать" },
+    { w: "只", p: "zhī", pos: "副", en: "individual [measure word for small animals]", ru: "только; (счётное слово для некоторых животных/предметов)" },
+    { w: "纸", p: "zhǐ", pos: "名", en: "paper", ru: "бумага" },
+    { w: "直到", p: "zhí dào", pos: "动", en: "until", ru: "вплоть до; до" },
+    { w: "只能", p: "zhǐ néng", pos: "副", en: "can only / have to", ru: "только и можно; остаётся только" }
+],
+18: [
+    { w: "只是", p: "zhǐ shì", pos: "副、连", en: "merely", ru: "только; просто; всего лишь" },
+    { w: "只要", p: "zhǐ yào", pos: "连", en: "so long as ...", ru: "стоит только; если только" },
+    { w: "只有", p: "zhǐ yǒu", pos: "连", en: "only if /only when", ru: "только если; только при условии" },
+    { w: "中", p: "zhōng", pos: "名", en: "middle", ru: "середина; центр; среди" },
+    { w: "种", p: "zhǒng", pos: "量", en: "kind", ru: "вид; род; сорт" },
+    { w: "中间", p: "zhōng jiān", pos: "名", en: "middle", ru: "середина; центр; между" },
+    { w: "重要", p: "zhòng yào", pos: "形", en: "important", ru: "важный" },
+    { w: "终于", p: "zhōng yú", pos: "副", en: "at last", ru: "в конце концов; наконец" },
+    { w: "周末", p: "zhōu mò", pos: "名", en: "weekend", ru: "выходные" },
+    { w: "主要", p: "zhǔ yào", pos: "形", en: "mainly", ru: "главный; основной" },
+    { w: "注意", p: "zhù yì", pos: "动", en: "take note of", ru: "обращать внимание" },
+    { w: "住院", p: "zhù yuàn", pos: "动", en: "be hospitalized /be in hospital", ru: "лежать в больнице; госпитализироваться" },
+    { w: "子", p: "zi", pos: "后缀", en: "son /child/ 无直接对应", ru: "сын; ребёнок; (суффикс)" },
+    { w: "字典", p: "zì diǎn", pos: "名", en: "dictionary", ru: "словарь (иероглифический)" },
+    { w: "自行车", p: "zì xíng chē", pos: "名", en: "bicycle", ru: "велосипед" },
+    { w: "总", p: "zǒng", pos: "副", en: "always", ru: "всегда; всё время" },
+    { w: "总是", p: "zǒng shì", pos: "副", en: "always", ru: "всегда; постоянно" },
+    { w: "嘴", p: "zuǐ", pos: "名", en: "mouth", ru: "рот" },
+    { w: "最好", p: "zuì hǎo", pos: "副", en: "best", ru: "лучший; лучше всего" },
+    { w: "最后", p: "zuì hòu", pos: "名", en: "lastly", ru: "последний; в конце концов" },
+    { w: "最近", p: "zuì jìn", pos: "名", en: "recently", ru: "недавно; в последнее время" },
+    { w: "做客", p: "zuò kè", pos: "动", en: "be a guest / visit as a guest", ru: "быть в гостях; гостить" },
+    { w: "作业", p: "zuò yè", pos: "名", en: "homework", ru: "домашнее задание" }
+]
+}
+};
+
+// --- 2. 核心状态管理 ---
+let G = { 
+    lvl: 1, 
+    unit: 1, 
+    step: 1, 
+    matched: 0, 
+    errors: 0, 
+    start: 0, 
+    selL: null, 
+    selR: null, 
+    wrongList: [], // 错词列表
+    mistakeItems: [] // 详细错词记录
+};
+
+// --- 3. 首页渲染逻辑 ---
+function renderLevelSelector() {
+    const box = document.getElementById('levelSelector');
+    let html = '';
+    for(let i=1; i<=9; i++) {
+        const locked = (i >= 3 && !G.user);
+        html += `<button class="lvl-btn ${G.lvl === i ? 'active' : ''}" onclick="selectLevel(${i})">
+            HSK ${i} ${locked ? '🔒' : ''}
+        </button>`;
+    }
+    box.innerHTML = html;
+}
+
+function selectLevel(n) {
+    if(n >= 3 && !G.user) {
+        document.getElementById('loginView').style.display = 'flex';
+        return;
+    }
+    G.lvl = n;
+    renderLevelSelector();
+    renderGrid();
+}
+
+function renderGrid() {
+    const grid = document.getElementById('unitGrid');
+    const icons = ["🐼", "🐨", "📚", "✨", "🍎", "🎨", "🚀", "🌈", "🐱", "🦊", "🦁", "🎒"];
+    const levelData = allData[`hsk${G.lvl}`] || {};
+    const units = Object.keys(levelData);
+
+    if(units.length === 0) {
+        grid.innerHTML = '<p style="text-align:center; grid-column:1/-1; color:#999;">Units coming soon...</p>';
+        return;
+    }
+
+    grid.innerHTML = units.map((u, i) => `
+        <div class="unit-card" onclick="startUnit(${u})">
+            <span class="unit-emoji">${icons[i % icons.length]}</span>
+            <span>Unit ${u}</span>
+        </div>
+    `).join('');
+}
+
+// --- 4. 登录逻辑 ---
+function checkLogin() {
+    const u = document.getElementById('username').value;
+    const p = document.getElementById('password').value;
+    if(users[u] && users[u] === p) {
+        G.user = u;
+        document.getElementById('loginView').style.display = 'none';
+        renderLevelSelector();
+        renderGrid();
+    } else {
+        document.getElementById('loginError').style.display = 'block';
+    }
+}
+
+// --- 5. 游戏引擎逻辑 ---
+function startUnit(id) {
+    G.unit = id; 
+    G.step = 1; 
+    G.errors = 0; 
+    G.start = Date.now();
+    G.wrongList = []; // 重置错词列表
+    G.mistakeItems = []; // 重置详细错词记录
+    
+    document.getElementById('homeView').style.display = 'none';
+    document.getElementById('gameView').style.display = 'block';
+    document.getElementById('unitTitle').innerText = `HSK ${G.lvl} - Unit ${id}`;
+    
+    // 隐藏错词面板
+    document.getElementById('mistakesPanel').style.display = 'none';
+    
+    initStep();
+}
+
+function initStep() {
+    G.matched = 0; 
+    G.selL = null; 
+    G.selR = null;
+    const nextBtn = document.getElementById('nextBtn');
+    nextBtn.style.background = '#ccc';
+    nextBtn.style.cursor = 'not-allowed';
+    
+    const isPinyin = G.step <= 5;
+    document.getElementById('modeTag').innerText = isPinyin ? "Hanzi ↔ Pinyin" : "Hanzi ↔ Translation";
+    
+    const pool = allData[`hsk${G.lvl}`][G.unit];
+    
+    // --- 核心优化：防同音字逻辑开始 ---
+    let words = [];
+    let usedPinyin = new Set(); // 记录已经选进去的拼音
+    
+    // 先把池子里的词随机打乱
+    let shuffledPool = [...pool].sort(() => Math.random() - 0.5);
+    
+    for (let item of shuffledPool) {
+        // 如果是拼音模式，检查拼音是否已经存在于这一组中
+        if (isPinyin) {
+            if (!usedPinyin.has(item.p)) {
+                words.push(item);
+                usedPinyin.add(item.p);
+            }
+        } else {
+            // 如果是翻译模式，通常不需要防重音，直接加进去
+            words.push(item);
+        }
+        
+        // 凑够5个就停止
+        if (words.length === 5) break;
+    }
+    
+    // 保底机制：如果词库太小，挑了半天凑不够5个不重音的词，就还是按原样补齐
+    if (words.length < 5) {
+        words = shuffledPool.slice(0, 5);
+    }
+    // --- 防同音字逻辑结束 ---
+    
+    const lCol = document.getElementById('leftCol');
+    const rCol = document.getElementById('rightCol');
+    lCol.innerHTML = ''; rCol.innerHTML = '';
+    
+    // 渲染左侧（汉字）
+    words.forEach(item => {
+        const d = document.createElement('div'); 
+        d.className = 'card'; 
+        d.innerText = item.w;
+        d.onclick = () => handleSelect('L', item, d); 
+        lCol.appendChild(d);
+    });
+    
+    // 渲染右侧（拼音或翻译）
+    [...words].sort(() => Math.random() - 0.5).forEach(item => {
+        const d = document.createElement('div'); 
+        d.className = 'card';
+        d.innerText = isPinyin ? item.p : `${item.en} / ${item.ru}`;
+        d.onclick = () => handleSelect('R', item, d); 
+        rCol.appendChild(d);
+    });
+    
+    // 更新进度显示
+    document.getElementById('progress').innerText = `Progress: ${G.matched}/5`;
+}
+
+function handleSelect(side, data, el) {
+    if(el.classList.contains('correct')) return;
+    
+    if(side === 'L') {
+        document.querySelectorAll('#leftCol .card').forEach(c => c.classList.remove('selected'));
+        G.selL = { data, el };
+    } else {
+        document.querySelectorAll('#rightCol .card').forEach(c => c.classList.remove('selected'));
+        G.selR = { data, el };
+    }
+    el.classList.add('selected');
+
+    if(G.selL && G.selR) {
+        if(G.selL.data.w === G.selR.data.w) {
+            // 匹配正确
+            G.selL.el.className = 'card correct';
+            G.selR.el.className = 'card correct';
+            G.matched++;
+            document.getElementById('progress').innerText = `Progress: ${G.matched}/5`;
+            if(G.matched === 5) {
+                document.getElementById('nextBtn').style.background = 'var(--success)';
+                document.getElementById('nextBtn').style.cursor = 'pointer';
+            }
+        } else {
+            // 匹配错误 - 记录错词
+            G.errors++;
+            
+            // 记录错词（避免重复）
+            if (!G.wrongList.includes(G.selL.data.w)) {
+                G.wrongList.push(G.selL.data.w);
+            }
+            
+            // 记录详细错词信息
+            const mistakeItem = {
+                hanzi: G.selL.data.w,
+                pinyin: G.selL.data.p,
+                english: G.selL.data.en,
+                russian: G.selL.data.ru,
+                timestamp: new Date().toLocaleTimeString(),
+                mode: G.step <= 5 ? '拼音' : '翻译'
+            };
+            
+            // 检查是否已存在相同错词
+            const exists = G.mistakeItems.some(item => item.hanzi === mistakeItem.hanzi);
+            if (!exists) {
+                G.mistakeItems.push(mistakeItem);
+                updateMistakesPanel();
+            }
+            
+            // 错误动画效果
+            const l = G.selL.el; 
+            const r = G.selR.el;
+            l.style.borderColor = 'var(--error)';
+            r.style.borderColor = 'var(--error)';
+            
+            setTimeout(() => { 
+                l.classList.remove('selected'); 
+                r.classList.remove('selected');
+                l.style.borderColor = '';
+                r.style.borderColor = '';
+            }, 400);
+        }
+        G.selL = null; 
+        G.selR = null;
+    }
+}
+
+// 更新错词面板
+function updateMistakesPanel() {
+    const mistakesPanel = document.getElementById('mistakesPanel');
+    const mistakesList = document.getElementById('mistakesList');
+    const mistakeCount = document.getElementById('mistakeCount');
+    
+    if (G.mistakeItems.length > 0) {
+        mistakesPanel.style.display = 'block';
+        mistakeCount.textContent = G.mistakeItems.length;
+        
+        // 清空现有内容
+        mistakesList.innerHTML = '';
+        
+        // 添加错词项
+        G.mistakeItems.forEach((item, index) => {
+            const mistakeDiv = document.createElement('div');
+            mistakeDiv.className = 'mistake-item';
+            mistakeDiv.innerHTML = `
+                <span class="mistake-hanzi">${item.hanzi}</span>
+                <span class="mistake-pinyin">${item.pinyin}</span>
+                <span class="mistake-translation">${item.english}</span>
+            `;
+            mistakesList.appendChild(mistakeDiv);
+        });
+    } else {
+        mistakesPanel.style.display = 'none';
+    }
+}
+
+// 清空错词
+function clearMistakes() {
+    G.mistakeItems = [];
+    G.wrongList = [];
+    updateMistakesPanel();
+}
+
+function nextLevel() {
+    if(G.matched < 5) return;
+    if(G.step < 10) { 
+        G.step++; 
+        initStep(); 
+    } else { 
+        showReport(); 
+    }
+}
+
+function showReport() {
+    const time = Math.floor((Date.now() - G.start)/1000);
+    document.getElementById('reportOverlay').style.display = 'flex';
+    
+    let reportHtml = `
+        <h2 style="margin-top:0">Unit Complete!</h2>
+        <div style="text-align:left; background:#f8f9fa; padding:15px; border-radius:10px; margin-bottom:15px;">
+            <strong>Level:</strong> HSK ${G.lvl}<br>
+            <strong>Unit:</strong> ${G.unit}<br>
+            <strong>Time:</strong> ${time} seconds<br>
+            <strong>Total Errors:</strong> <span style="color:var(--error)">${G.errors}</span> times
+        </div>
+    `;
+
+    // 错词回顾部分
+    const mistakesReview = document.getElementById('mistakesReview');
+    const reviewList = document.getElementById('reviewList');
+    
+    if (G.mistakeItems.length > 0) {
+        reportHtml += `<p style="color:var(--error); font-weight:bold;">You made ${G.mistakeItems.length} mistakes!</p>`;
+        
+        // 显示错词回顾
+        mistakesReview.style.display = 'block';
+        
+        let reviewHtml = '';
+        G.mistakeItems.forEach((item, index) => {
+            reviewHtml += `
+                <div style="padding: 8px; border-bottom: 1px solid #eee; ${index === G.mistakeItems.length - 1 ? 'border-bottom: none;' : ''}">
+                    <div style="font-weight: bold; font-size: 16px;">${item.hanzi}</div>
+                    <div style="font-size: 12px; color: #666;">${item.pinyin}</div>
+                    <div style="font-size: 12px; color: #888;">
+                        <span>${item.english}</span> | 
+                        <span>${item.russian}</span>
+                    </div>
+                    <div style="font-size: 10px; color: #aaa; margin-top: 4px;">
+                        Mode: ${item.mode} | Time: ${item.timestamp}
+                    </div>
+                </div>
+            `;
+        });
+        reviewList.innerHTML = reviewHtml;
+    } else {
+        reportHtml += `<p style="color:var(--success); font-weight:bold;">Perfect! No mistakes!</p>`;
+        mistakesReview.style.display = 'none';
+    }
+
+    document.getElementById('reportContent').innerHTML = reportHtml;
+}
+
+function goHome() {
+    document.getElementById('gameView').style.display = 'none';
+    document.getElementById('reportOverlay').style.display = 'none';
+    document.getElementById('homeView').style.display = 'block';
+    renderGrid();
+}
+
+// --- 6. 自动计时器 ---
+setInterval(() => {
+    if(document.getElementById('gameView').style.display === 'block') {
+        const d = Math.floor((Date.now()-G.start)/1000);
+        document.getElementById('timer').innerText = `${String(Math.floor(d/60)).padStart(2,'0')}:${String(d%60).padStart(2,'0')}`;
+    }
+}, 1000);
+
+// --- 7. 启动 ---
+renderLevelSelector();
+renderGrid();
+</script>
+</body>
+</html>
