@@ -188,34 +188,103 @@ const users = { "Fedor": "yct3", "Mia": "yct3", "Dima": "yct3" };
 // YCT示例数据 - 等待后续替换
 const allData = {
     yct1: {
-        1: [
-            { w: "你好", p: "nǐ hǎo", pos: "动", en: "hello", ru: "привет" },
-            { w: "我", p: "wǒ", pos: "代", en: "I, me", ru: "я" },
-            { w: "好", p: "hǎo", pos: "形", en: "good", ru: "хороший" },
-            { w: "谢谢", p: "xiè xie", pos: "动", en: "thank you", ru: "спасибо" },
-            { w: "再见", p: "zài jiàn", pos: "动", en: "goodbye", ru: "до свидания" }
-        ],
-        2: [
-            { w: "爸爸", p: "bà ba", pos: "名", en: "father", ru: "папа" },
-            { w: "妈妈", p: "mā ma", pos: "名", en: "mother", ru: "мама" },
-            { w: "是", p: "shì", pos: "动", en: "to be", ru: "быть" },
-            { w: "老师", p: "lǎo shī", pos: "名", en: "teacher", ru: "учитель" },
-            { w: "学生", p: "xué sheng", pos: "名", en: "student", ru: "студент" }
-        ],
-        3: [
-            { w: "一", p: "yī", pos: "数", en: "one", ru: "один" },
-            { w: "二", p: "èr", pos: "数", en: "two", ru: "два" },
-            { w: "三", p: "sān", pos: "数", en: "three", ru: "три" },
-            { w: "四", p: "sì", pos: "数", en: "four", ru: "четыре" },
-            { w: "五", p: "wǔ", pos: "数", en: "five", ru: "пять" }
-        ],
-        4: [
-            { w: "大", p: "dà", pos: "形", en: "big", ru: "большой" },
-            { w: "小", p: "xiǎo", pos: "形", en: "small", ru: "маленький" },
-            { w: "多", p: "duō", pos: "形", en: "many", ru: "много" },
-            { w: "少", p: "shǎo", pos: "形", en: "few", ru: "мало" },
-            { w: "好", p: "hǎo", pos: "形", en: "good", ru: "хороший" }
-        ]
+    1: [
+        { w: "爱", p: "ài", pos: "动", en: "to love", ru: "любить" },
+        { w: "八", p: "bā", pos: "数", en: "eight", ru: "восемь" },
+        { w: "爸爸", p: "bà ba", pos: "名", en: "father", ru: "папа" },
+        { w: "鼻子", p: "bí zi", pos: "名", en: "nose", ru: "нос" },
+        { w: "不", p: "bù", pos: "副", en: "not; no", ru: "не; нет" },
+        { w: "长", p: "cháng", pos: "形", en: "long", ru: "длинный" },
+        { w: "吃", p: "chī", pos: "动", en: "to eat", ru: "есть" },
+        { w: "大", p: "dà", pos: "形", en: "big", ru: "большой" },
+        { w: "的", p: "de", pos: "助", en: "of", ru: "притяжательная частица" },
+        { w: "点", p: "diǎn", pos: "名", en: "o’clock; spot; dot", ru: "час; точка" },
+        { w: "多", p: "duō", pos: "形/副", en: "much/many; how [+adjective]", ru: "много; как [+прил.]" },
+        { w: "二", p: "èr", pos: "数", en: "two", ru: "два" }
+    ],
+           2: [
+        { w: "耳朵", p: "ěr duo", pos: "名", en: "ears", ru: "уши" },
+        { w: "高", p: "gāo", pos: "形", en: "high; tall", ru: "высокий" },
+        { w: "高兴", p: "gāo xìng", pos: "形", en: "pleased; happy", ru: "радостный; счастливый" },
+        { w: "个", p: "gè", pos: "量", en: "individual; [general measure word]", ru: "общий счётный слово" },
+        { w: "哥哥", p: "gē ge", pos: "名", en: "elder brother", ru: "старший брат" },
+        { w: "个子", p: "gè zi", pos: "名", en: "height; stature", ru: "рост" },
+        { w: "狗", p: "gǒu", pos: "名", en: "dog", ru: "собака" },
+        { w: "好", p: "hǎo", pos: "形", en: "good", ru: "хороший" },
+        { w: "号", p: "hào", pos: "名", en: "date", ru: "число (дата)" },
+        { w: "喝", p: "hē", pos: "动", en: "to drink", ru: "пить" },
+        { w: "和", p: "hé", pos: "连", en: "and", ru: "и" },
+        { w: "很", p: "hěn", pos: "副", en: "very", ru: "очень" }
+    ],
+           3: [
+        { w: "几", p: "jǐ", pos: "代", en: "how much/many? [expecting a small number]", ru: "сколько (небольшое число)" },
+        { w: "家", p: "jiā", pos: "名", en: "family; home", ru: "семья; дом" },
+        { w: "叫", p: "jiào", pos: "动", en: "to call; to be named", ru: "звать; называться" },
+        { w: "姐姐", p: "jiě jie", pos: "名", en: "elder sister", ru: "старшая сестра" },
+        { w: "今天", p: "jīn tiān", pos: "名", en: "today", ru: "сегодня" },
+        { w: "九", p: "jiǔ", pos: "数", en: "nine", ru: "девять" },
+        { w: "看", p: "kàn", pos: "动", en: "to see; to read; to watch; to look at", ru: "видеть; читать; смотреть" },
+        { w: "口", p: "kǒu", pos: "名/量", en: "mouth; [measure word for family members]", ru: "рот; [счётное слово для членов семьи]" },
+        { w: "老师", p: "lǎo shī", pos: "名", en: "teacher", ru: "учитель" },
+        { w: "六", p: "liù", pos: "数", en: "six", ru: "шесть" },
+        { w: "吗", p: "ma", pos: "助", en: "[makes a yes/no question]", ru: "[частица для вопросов да/нет]" },
+        { w: "妈妈", p: "mā ma", pos: "名", en: "mother", ru: "мама" }
+    ],
+          4: [
+        { w: "猫", p: "māo", pos: "名", en: "cat", ru: "кот; кошка" },
+        { w: "米饭", p: "mǐ fàn", pos: "名", en: "rice [cooked; boiled]", ru: "варёный рис" },
+        { w: "面条", p: "miàn tiáo", pos: "名", en: "noodles", ru: "лапша" },
+        { w: "明天", p: "míng tiān", pos: "名", en: "tomorrow", ru: "завтра" },
+        { w: "哪", p: "nǎ", pos: "代", en: "which?", ru: "какой? который?" },
+        { w: "那", p: "nà", pos: "代", en: "that", ru: "тот" },
+        { w: "哪儿", p: "nǎr", pos: "代", en: "where?", ru: "где? куда?" },
+        { w: "那儿", p: "nàr", pos: "代", en: "there", ru: "там" },
+        { w: "你", p: "nǐ", pos: "代", en: "you", ru: "ты; вы" },
+        { w: "鸟", p: "niǎo", pos: "名", en: "bird", ru: "птица" },
+        { w: "牛奶", p: "niú nǎi", pos: "名", en: "milk", ru: "молоко" }
+    ],
+    5:[
+    { w: "苹果", p: "píng guǒ", pos: "名", en: "apple", ru: "яблоко" },
+    { w: "七", p: "qī", pos: "数", en: "seven", ru: "семь" },
+    { w: "去", p: "qù", pos: "动", en: "to go", ru: "идти; ходить" },
+    { w: "认识", p: "rèn shi", pos: "动", en: "to know [be familiar with]", ru: "знать; быть знакомым" },
+    { w: "三", p: "sān", pos: "数", en: "three", ru: "три" },
+    { w: "商店", p: "shāng diàn", pos: "名", en: "shop", ru: "магазин" },
+    { w: "谁", p: "shéi", pos: "代", en: "who?", ru: "кто?" },
+    { w: "什么", p: "shén me", pos: "代", en: "what?", ru: "что?" },
+    { w: "十", p: "shí", pos: "数", en: "ten", ru: "десять" },
+    { w: "是", p: "shì", pos: "动", en: "to be", ru: "быть; являться" },
+    { w: "手", p: "shǒu", pos: "名", en: "hand", ru: "рука" },
+    { w: "水", p: "shuǐ", pos: "名", en: "water", ru: "вода" },
+    { w: "四", p: "sì", pos: "数", en: "four", ru: "четыре" },
+    { w: "岁", p: "suì", pos: "名", en: "year (of crop harvests)", ru: "год (возраста)" }
+],
+6:[
+    { w: "他", p: "tā", pos: "代", en: "he; him", ru: "он; его" },
+    { w: "她", p: "tā", pos: "代", en: "she; her", ru: "она; её" },
+    { w: "头发", p: "tóu fa", pos: "名", en: "hair", ru: "волосы" },
+    { w: "我", p: "wǒ", pos: "代", en: "I; me", ru: "я; меня" },
+    { w: "我们", p: "wǒ men", pos: "代", en: "we; us", ru: "мы; нас" },
+    { w: "五", p: "wǔ", pos: "数", en: "five", ru: "пять" },
+    { w: "喜欢", p: "xǐ huan", pos: "动", en: "to like", ru: "нравиться" },
+    { w: "现在", p: "xiàn zài", pos: "名", en: "now", ru: "сейчас" },
+    { w: "小", p: "xiǎo", pos: "形", en: "small", ru: "маленький" },
+    { w: "谢谢", p: "xiè xie", pos: "动", en: "thank you", ru: "спасибо" },
+    { w: "星期", p: "xīng qī", pos: "名", en: "week", ru: "неделя" },
+    { w: "学校", p: "xué xiào", pos: "名", en: "school", ru: "школа" },
+    { w: "眼睛", p: "yǎn jing", pos: "名", en: "eye", ru: "глаз" }
+],
+7:[
+    { w: "一", p: "yī", pos: "数", en: "one; once; first", ru: "один; раз; первый" },
+    { w: "有", p: "yǒu", pos: "动", en: "to have", ru: "иметь" },
+    { w: "鱼", p: "yú", pos: "名", en: "fish", ru: "рыба" },
+    { w: "月", p: "yuè", pos: "名", en: "month; moon", ru: "месяц; луна" },
+    { w: "在", p: "zài", pos: "介", en: "in; at; on", ru: "в; на" },
+    { w: "再见", p: "zài jiàn", pos: "动", en: "goodbye", ru: "до свидания" },
+    { w: "这", p: "zhè", pos: "代", en: "this", ru: "этот" },
+    { w: "这儿", p: "zhèr", pos: "代", en: "here", ru: "здесь" },
+    { w: "中国人", p: "zhōng guó rén", pos: "名", en: "Chinese [person]", ru: "китаец; китаянка" }
+]
     },
     yct2: {
         1: [
