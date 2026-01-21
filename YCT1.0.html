@@ -28,6 +28,21 @@
             box-shadow: 0 4px 10px rgba(0,0,0,0.05); transition: 0.3s; border: 2px solid transparent; 
         }
         .unit-card:hover { transform: translateY(-5px); border-color: var(--primary); }
+        /* 在这里添加已完成单元的样式 */
+.unit-card.completed {
+    opacity: 0.8;
+    border-color: var(--success) !important;
+    background: linear-gradient(135deg, #f6ffed 0%, #e6f7ff 100%);
+}
+
+.unit-card.completed:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(24, 144, 255, 0.2);
+}
+
+.unit-card.completed .unit-emoji {
+    opacity: 0.6;
+}
         .unit-emoji { font-size: 45px; margin-bottom: 10px; display: block; }
 
         #gameView { display: none; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); }
@@ -133,8 +148,23 @@
     <div id="homeView">
         <h1 class="main-title">🌟 YCT Vocabulary 🐼</h1>
         <div id="levelSelector"></div>
+         <!-- 这里添加重置按钮 -->
+        <div style="text-align: center; margin: 10px 0;">
+            <button class="lvl-btn" onclick="clearCompletedUnits(); renderGrid();" 
+                    style="background: #ffccc7; color: #ff4d4f; font-size: 12px; padding: 5px 15px;">
+                重置完成状态
+                Reset Progress
+                Сбросить прогресс
+            </button>
+        </div>
+        
         <div class="unit-grid" id="unitGrid"></div>
     </div>
+    
+    <div id="gameView">
+        <!-- 游戏界面内容 -->
+    </div>
+</div>
 
     <div id="gameView">
         <div class="header">
@@ -926,6 +956,23 @@ const allData = {
 ]
     }
 };
+// --- 存储管理：记录学生完成的单元 ---
+function getCompletedUnits() {
+    const stored = localStorage.getItem(`yct_completed_${G.user || 'guest'}_lvl${G.lvl}`);
+    return stored ? JSON.parse(stored) : [];
+}
+
+function saveCompletedUnit(unitId) {
+    const completed = getCompletedUnits();
+    if (!completed.includes(unitId)) {
+        completed.push(unitId);
+        localStorage.setItem(`yct_completed_${G.user || 'guest'}_lvl${G.lvl}`, JSON.stringify(completed));
+    }
+}
+
+function clearCompletedUnits() {
+    localStorage.removeItem(`yct_completed_${G.user || 'guest'}_lvl${G.lvl}`);
+}
 
 // --- 2. 核心状态管理 ---
 let G = { 
@@ -969,18 +1016,28 @@ function renderGrid() {
     const icons = ["🐼", "🐨", "📚", "✨", "🍎", "🎨", "🚀", "🌈", "🐱", "🦊", "🦁", "🎒"];
     const levelData = allData[`yct${G.lvl}`] || {};
     const units = Object.keys(levelData);
+    
+    // 获取已完成的单元
+    const completedUnits = getCompletedUnits();
 
     if(units.length === 0) {
         grid.innerHTML = '<p style="text-align:center; grid-column:1/-1; color:#999;">Units coming soon...</p>';
         return;
     }
 
-    grid.innerHTML = units.map((u, i) => `
-        <div class="unit-card" onclick="startUnit(${u})">
+    grid.innerHTML = units.map((u, i) => {
+        const isCompleted = completedUnits.includes(parseInt(u));
+        
+        return `
+        <div class="unit-card ${isCompleted ? 'completed' : ''}" onclick="startUnit(${u})">
             <span class="unit-emoji">${icons[i % icons.length]}</span>
-            <span>Unit ${u}</span>
+            <div style="display: flex; flex-direction: column; align-items: center;">
+                <span>Unit ${u}</span>
+                ${isCompleted ? '<span style="color: var(--success); font-size: 12px; margin-top: 5px;">✓ 已完成</span>' : ''}
+            </div>
         </div>
-    `).join('');
+        `;
+    }).join('');
 }
 
 // --- 4. 登录逻辑 ---
@@ -1200,10 +1257,12 @@ function nextLevel() {
 function showReport() {
     const time = Math.floor((Date.now() - G.start)/1000);
     document.getElementById('reportOverlay').style.display = 'flex';
+     // 保存单元完成状态
+    saveCompletedUnit(G.unit);
     
     let reportHtml = `
         <h2 style="margin-top:0">Unit Complete!</h2>
-        <div style="text-align:left; background:#f8f9fa; padding:15px; border-radius:10px; margin-bottom:15px;">
+        <="text-align:left; background:#f8f9fa; padding:15px; border-radius:10px; margin-bottom:15px;">
             <strong>Level:</strong> YCT ${G.lvl}<br>
             <strong>Unit:</strong> ${G.unit}<br>
             <strong>Time:</strong> ${time} seconds<br>
