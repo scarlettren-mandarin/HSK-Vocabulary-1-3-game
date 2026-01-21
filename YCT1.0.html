@@ -129,6 +129,36 @@
             font-size: 12px;
             margin-left: 8px;
         }
+        /* 锁定状态样式 */
+.unit-card.locked {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: #f5f5f5;
+    border-color: #ddd !important;
+}
+
+.unit-card.locked:hover {
+    transform: none;
+    border-color: #ddd !important;
+}
+
+.unit-card.locked .unit-emoji {
+    opacity: 0.3;
+}
+
+.unit-lock {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 14px;
+}
+
+/* 星级样式 */
+.star-rating {
+    color: #ffcc00;
+    font-size: 14px;
+    letter-spacing: 2px;
+}
     </style>
 </head>
 <body>
@@ -148,16 +178,23 @@
     <div id="homeView">
         <h1 class="main-title">🌟 YCT Vocabulary 🐼</h1>
         <div id="levelSelector"></div>
-         <!-- 这里添加重置按钮 -->
-        <div style="text-align: center; margin: 10px 0;">
-            <button class="lvl-btn" onclick="clearCompletedUnits(); renderGrid();" 
-                    style="background: #ffccc7; color: #ff4d4f; font-size: 12px; padding: 5px 15px;">
-                重置完成状态
-                Reset Progress
-                Сбросить прогресс
+         <!-- ▼▼▼ 在这里添加你的进度统计HTML代码 ▼▼▼ -->
+        <div style="text-align: center; margin: 20px 0;">
+            <!-- 重置按钮 -->
+            <button class="lvl-btn" onclick="clearUnitData(); renderGrid();" 
+                    style="background: #ffccc7; color: #ff4d4f; font-size: 12px; padding: 5px 15px; margin-right: 10px;">
+                重置进度 / Reset / Сбросить
             </button>
+            
+            <!-- 进度统计 -->
+            <div id="progressStats" style="display: inline-block; padding: 8px 15px; background: white; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                <span style="font-weight: bold; color: var(--primary);">进度: </span>
+                <span id="progressPercentage">0%</span>
+                <span style="margin: 0 10px; color: #ddd">|</span>
+                <span style="font-weight: bold; color: var(--success);">已完成: </span>
+                <span id="completedCount">0</span>/<span id="totalUnits">0</span>
+            </div>
         </div>
-        
         <div class="unit-grid" id="unitGrid"></div>
     </div>
     
@@ -953,22 +990,25 @@ const allData = {
 ]
     }
 };
-// --- 存储管理：记录学生完成的单元 ---
-function getCompletedUnits() {
-    const stored = localStorage.getItem(`yct_completed_${G.user || 'guest'}_lvl${G.lvl}`);
-    return stored ? JSON.parse(stored) : [];
+// --- 存储管理：记录学生完成的单元和评分 ---
+function getUnitData() {
+    const stored = localStorage.getItem(`yct_data_${G.user || 'guest'}_lvl${G.lvl}`);
+    return stored ? JSON.parse(stored) : {};
 }
 
-function saveCompletedUnit(unitId) {
-    const completed = getCompletedUnits();
-    if (!completed.includes(unitId)) {
-        completed.push(unitId);
-        localStorage.setItem(`yct_completed_${G.user || 'guest'}_lvl${G.lvl}`, JSON.stringify(completed));
-    }
+function saveUnitData(unitId, data) {
+    const unitData = getUnitData();
+    unitData[unitId] = {
+        ...unitData[unitId],
+        ...data,
+        completed: true,
+        completedTime: new Date().toISOString()
+    };
+    localStorage.setItem(`yct_data_${G.user || 'guest'}_lvl${G.lvl}`, JSON.stringify(unitData));
 }
 
-function clearCompletedUnits() {
-    localStorage.removeItem(`yct_completed_${G.user || 'guest'}_lvl${G.lvl}`);
+function clearUnitData() {
+    localStorage.removeItem(`yct_data_${G.user || 'guest'}_lvl${G.lvl}`);
 }
 
 // --- 2. 核心状态管理 ---
@@ -984,7 +1024,43 @@ let G = {
     wrongList: [], // 错词列表
     mistakeItems: [] // 详细错词记录
 };
+// ==================== 在这里添加进度统计函数 ====================
+// 添加更新进度统计的函数
+function updateProgressStats() {
+    const unitData = getUnitData();
+    const levelData = allData[`yct${G.lvl}`] || {};
+    const totalUnits = Object.keys(levelData).length;
+    const completedUnits = Object.keys(unitData).length;
+    
+    const percentage = totalUnits > 0 ? Math.round((completedUnits / totalUnits) * 100) : 0;
+    
+    document.getElementById('progressPercentage').textContent = `${percentage}%`;
+    document.getElementById('completedCount').textContent = completedUnits;
+    document.getElementById('totalUnits').textContent = totalUnits;
+    
+    // 更新进度条（可选）
+    updateProgressBar(percentage);
+}
 
+// 可选：添加进度条样式
+function updateProgressBar(percentage) {
+    let progressBar = document.getElementById('progressBar');
+    if (!progressBar) {
+        // 第一次创建进度条
+        const statsDiv = document.getElementById('progressStats');
+        const progressBarHtml = `
+            <div style="margin-top: 8px;">
+                <div style="width: 100%; height: 6px; background: #f0f0f0; border-radius: 3px; overflow: hidden;">
+                    <div id="progressBar" style="width: ${percentage}%; height: 100%; background: linear-gradient(90deg, var(--primary), var(--success)); transition: width 0.5s ease;"></div>
+                </div>
+            </div>
+        `;
+        statsDiv.insertAdjacentHTML('beforeend', progressBarHtml);
+    } else {
+        progressBar.style.width = `${percentage}%`;
+    }
+}
+// ==================== 进度统计函数结束 ====================
 // --- 3. 首页渲染逻辑 ---
 function renderLevelSelector() {
     const box = document.getElementById('levelSelector');
@@ -1012,10 +1088,10 @@ function renderGrid() {
     const grid = document.getElementById('unitGrid');
     const icons = ["🐼", "🐨", "📚", "✨", "🍎", "🎨", "🚀", "🌈", "🐱", "🦊", "🦁", "🎒"];
     const levelData = allData[`yct${G.lvl}`] || {};
-    const units = Object.keys(levelData);
+    const units = Object.keys(levelData).map(Number).sort((a, b) => a - b);
     
     // 获取已完成的单元
-    const completedUnits = getCompletedUnits();
+    const unitData = getUnitData();
 
     if(units.length === 0) {
         grid.innerHTML = '<p style="text-align:center; grid-column:1/-1; color:#999;">Units coming soon...</p>';
@@ -1023,18 +1099,50 @@ function renderGrid() {
     }
 
     grid.innerHTML = units.map((u, i) => {
-        const isCompleted = completedUnits.includes(parseInt(u));
+        const data = unitData[u];
+        const isCompleted = data && data.completed;
+        // 解锁逻辑：第一个单元直接解锁，其他单元需要前一个单元完成
+        let isLocked = false;
+        let lockReason = '';
         
+        if (u > 1) { // 从第二个单元开始检查
+            const prevUnit = unitData[u-1];
+            if (!prevUnit || !prevUnit.completed) {
+                isLocked = true;
+                lockReason = `需先完成 Unit ${u-1}`;
+            }
+        }
         return `
-        <div class="unit-card ${isCompleted ? 'completed' : ''}" onclick="startUnit(${u})">
+        <div class="unit-card ${isCompleted ? 'completed' : ''} ${isLocked ? 'locked' : ''}" 
+             onclick="${isLocked ? '' : `startUnit(${u})`}">
+            ${isLocked ? '<span class="unit-lock">🔒</span>' : ''}
             <span class="unit-emoji">${icons[i % icons.length]}</span>
             <div style="display: flex; flex-direction: column; align-items: center;">
                 <span>Unit ${u}</span>
-                ${isCompleted ? '<span style="color: var(--success); font-size: 12px; margin-top: 5px;">✓ 已完成</span>' : ''}
+                ${isCompleted ? `
+                    <div style="color: var(--success); font-size: 10px; margin-top: 5px;">
+                        <div>✓ Completed</div>
+                        <div style="color: #ffcc00; font-size: 12px;">${'★'.repeat(data.stars)}${'☆'.repeat(3-data.stars)}</div>
+                    </div>
+                ` : ''}
+                ${isLocked ? `
+                    <div style="color: #999; font-size: 10px; margin-top: 5px;">
+                        <div>🔒 Locked</div>
+                        <div style="font-size: 9px;">${lockReason}</div>
+                    </div>
+                ` : ''}
+                ${!isCompleted && !isLocked ? `
+                    <div style="color: #999; font-size: 10px; margin-top: 5px;">
+                        未开始
+                    </div>
+                ` : ''}
             </div>
         </div>
         `;
     }).join('');
+    
+    // 更新进度统计
+    updateProgressStats();
 }
 
 // --- 4. 登录逻辑 ---
@@ -1254,16 +1362,37 @@ function nextLevel() {
 function showReport() {
     const time = Math.floor((Date.now() - G.start)/1000);
     document.getElementById('reportOverlay').style.display = 'flex';
-     // 保存单元完成状态
-    saveCompletedUnit(G.unit);
+       // 计算星级
+    let stars = 3; // 默认三星
+    if (G.errors >= 3) {
+        stars = 1;
+    } else if (G.errors >= 1) {
+        stars = 2;
+    }
+    
+    // 保存单元数据（包含星级和错误数）
+    saveUnitData(G.unit, {
+        stars: stars,
+        errors: G.errors,
+        time: time,
+        totalQuestions: 50 // 10个step * 5个匹配
+    });
     
     let reportHtml = `
         <h2 style="margin-top:0">Unit Complete!</h2>
-        <="text-align:left; background:#f8f9fa; padding:15px; border-radius:10px; margin-bottom:15px;">
-            <strong>Level:</strong> YCT ${G.lvl}<br>
-            <strong>Unit:</strong> ${G.unit}<br>
-            <strong>Time:</strong> ${time} seconds<br>
-            <strong>Total Errors:</strong> <span style="color:var(--error)">${G.errors}</span> times
+        <div style="text-align:center; margin:15px 0;">
+            <div style="font-size: 24px; color: #ffcc00;">
+                ${'★'.repeat(stars)}${'☆'.repeat(3-stars)}
+            </div>
+            <div style="font-size: 14px; color: #666; margin-top: 5px;">
+                ${stars === 3 ? '完美！' : stars === 2 ? '不错！' : '继续加油！'}
+            </div>
+        </div>
+        <div style="text-align:left; background:#f8f9fa; padding:15px; border-radius:10px; margin-bottom:15px;">
+            <strong>评分:</strong> ${stars}星<br>
+            <strong>错误:</strong> <span style="color:var(${G.errors === 0 ? '--success' : '--error'})">${G.errors}</span> 次<br>
+            <strong>时间:</strong> ${time}秒<br>
+            <strong>单元:</strong> YCT ${G.lvl} - Unit ${G.unit}
         </div>
     `;
 
